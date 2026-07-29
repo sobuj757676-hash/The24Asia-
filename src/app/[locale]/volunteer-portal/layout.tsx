@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { PortalShell } from "@/components/portal/portal-shell";
+import { setRequestLocale } from "next-intl/server";
+import { AppShell } from "@/components/shell/app-shell";
 import { getCurrentUser } from "@/lib/auth/session";
 import { ensurePerson } from "@/lib/auth/onboarding";
+import { availablePanels } from "@/lib/auth/panels";
 
 export default async function VolunteerPortalLayout({
   children,
@@ -18,20 +19,14 @@ export default async function VolunteerPortalLayout({
   if (!user) redirect("/sign-in?redirect=/volunteer-portal");
   if (!user.personId) await ensurePerson(user.userId, user.name);
 
-  const t = await getTranslations("portal");
-  const nav = [
-    { href: "/volunteer-portal", label: t("volunteerDashboard") },
-    { href: "/volunteer-portal/profile", label: "Profile" },
-    { href: "/volunteer-portal/applications", label: t("myApplications") },
-    { href: "/volunteer-portal/shifts", label: t("myShifts") },
-    { href: "/volunteer-portal/hours", label: t("myHours") },
-    { href: "/volunteer-portal/expenses", label: "Expenses" },
-    { href: "/volunteer-portal/report", label: "Report a concern" },
-  ];
-
   return (
-    <PortalShell title="24Asia Volunteer" nav={nav}>
+    <AppShell
+      panel="volunteer"
+      title="Volunteer hub"
+      user={{ name: user.displayName || user.name, email: user.email }}
+      panels={availablePanels(user.roles)}
+    >
       {children}
-    </PortalShell>
+    </AppShell>
   );
 }

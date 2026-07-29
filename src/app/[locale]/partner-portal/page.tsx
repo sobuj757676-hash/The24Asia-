@@ -1,13 +1,10 @@
 import { redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { Container, Section, Badge, EmptyState } from "@/components/ui/misc";
+import { Badge, EmptyState } from "@/components/ui/misc";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Field, Input, Textarea, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SignOutButton } from "@/components/portal/sign-out-button";
 import { getCurrentUser } from "@/lib/auth/session";
-import { ensurePerson } from "@/lib/auth/onboarding";
 import { myPartners, partnerListings, getPartnerAgreements } from "@/server/queries/ops";
 import { submitPartnerListing } from "@/server/actions/ops";
 
@@ -22,7 +19,6 @@ export default async function PartnerPortal({
   setRequestLocale(locale);
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in?redirect=/partner-portal");
-  if (!user.personId) await ensurePerson(user.userId, user.name);
 
   const partners = await myPartners(user.personId);
   const withListings = await Promise.all(
@@ -34,26 +30,14 @@ export default async function PartnerPortal({
   );
 
   return (
-    <div className="min-h-dvh bg-[var(--background)]">
-      <header className="border-b bg-[var(--card)]">
-        <Container className="flex h-14 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-extrabold text-brand-700">
-            <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-white">24</span>
-            Partner portal
-          </Link>
-          <SignOutButton label="Sign out" />
-        </Container>
-      </header>
-
-      <Section>
-        <Container className="max-w-3xl">
-          {partners.length === 0 ? (
-            <EmptyState
-              title="No partner organization linked"
-              body="Ask 24Asia to link your account to your organization, then you can submit opportunities and manage your listings here."
-            />
-          ) : (
-            <div className="space-y-8">
+    <div className="max-w-3xl">
+      {partners.length === 0 ? (
+        <EmptyState
+          title="No partner organization linked"
+          body="Ask 24Asia to link your account to your organization, then you can submit opportunities and manage your listings here."
+        />
+      ) : (
+        <div className="space-y-8">
               {withListings.map(({ partner, listings, agreements }) => {
                 return (
                   <div key={partner.id}>
@@ -127,8 +111,6 @@ export default async function PartnerPortal({
               })}
             </div>
           )}
-        </Container>
-      </Section>
     </div>
   );
 }
