@@ -11,6 +11,7 @@ import { Container, Section } from "@/components/ui/misc";
 import { toast } from "sonner";
 
 type Step = "request" | "verify";
+type Method = "email" | "phone" | "password";
 
 export function SignInForm() {
   const t = useTranslations("auth");
@@ -18,9 +19,10 @@ export function SignInForm() {
   const search = useSearchParams();
   const redirectTo = search.get("redirect") || "/account";
 
-  const [method, setMethod] = useState<"email" | "phone">("email");
+  const [method, setMethod] = useState<Method>("email");
   const [step, setStep] = useState<Step>("request");
   const [target, setTarget] = useState("");
+  const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -54,16 +56,10 @@ export function SignInForm() {
     setBusy(true);
     try {
       if (method === "email") {
-        const { error } = await authClient.signIn.emailOtp({
-          email: target,
-          otp: code,
-        });
+        const { error } = await authClient.signIn.emailOtp({ email: target, otp: code });
         if (error) throw error;
       } else {
-        const { error } = await authClient.phoneNumber.verify({
-          phoneNumber: target,
-          code,
-        });
+        const { error } = await authClient.phoneNumber.verify({ phoneNumber: target, code });
         if (error) throw error;
       }
       router.push(redirectTo);
@@ -75,13 +71,65 @@ export function SignInForm() {
     }
   }
 
+  async function signInPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const { error } = await authClient.signIn.email({ email: target, password });
+      if (error) throw error;
+      router.push(redirectTo);
+      router.refresh();
+    } catch {
+      toast.error(t("error"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <Section>
       <Container className="max-w-md">
         <h1 className="text-2xl font-extrabold">{t("signInTitle")}</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">{t("signInIntro")}</p>
 
-        {step === "request" ? (
+        {method === "password" ? (
+          <form onSubmit={signInPassword} className="mt-6 space-y-4">
+            <Field label={t("email")} htmlFor="pw-email">
+              <Input
+                id="pw-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+              />
+            </Field>
+            <Field label="Password" htmlFor="pw">
+              <Input
+                id="pw"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </Field>
+            <Button type="submit" disabled={busy} className="w-full">
+              {busy ? "…" : t("signInTitle")}
+            </Button>
+            <button
+              type="button"
+              className="w-full text-sm text-brand-700"
+              onClick={() => {
+                setMethod("email");
+                setStep("request");
+              }}
+            >
+              Use a one-time code instead
+            </button>
+          </form>
+        ) : step === "request" ? (
           <form onSubmit={requestCode} className="mt-6 space-y-4">
             {method === "email" ? (
               <Field label={t("email")} htmlFor="target">
@@ -111,13 +159,22 @@ export function SignInForm() {
             <Button type="submit" disabled={busy} className="w-full">
               {busy ? "…" : t("sendCode")}
             </Button>
-            <button
-              type="button"
-              className="w-full text-sm text-brand-700"
-              onClick={() => setMethod(method === "email" ? "phone" : "email")}
-            >
-              {method === "email" ? t("usePhone") : t("useEmail")}
-            </button>
+            <div className="flex items-center justify-between text-sm">
+              <button
+                type="button"
+                className="text-brand-700"
+                onClick={() => setMethod(method === "email" ? "phone" : "email")}
+              >
+                {method === "email" ? t("usePhone") : t("useEmail")}
+              </button>
+              <button
+                type="button"
+                className="text-brand-700"
+                onClick={() => setMethod("password")}
+              >
+                Sign in with password
+              </button>
+            </div>
           </form>
         ) : (
           <form onSubmit={verify} className="mt-6 space-y-4">
