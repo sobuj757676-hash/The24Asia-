@@ -1,5 +1,5 @@
 import "server-only";
-import { desc, eq, gte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   course,
@@ -122,4 +122,155 @@ export async function getFlags() {
 
 export async function getInquiries() {
   return db.select().from(inquiry).orderBy(desc(inquiry.createdAt)).limit(100);
+}
+
+
+/* ------------------------------------------------ management list queries */
+import {
+  service,
+  partner,
+  liveShowEpisode,
+  product,
+  productVariant,
+  policy,
+  contentItem,
+  contentTranslation,
+  cohortSession,
+  newsletterCampaign,
+  incident,
+  risk,
+  expenseClaim,
+  supportRequest,
+} from "@/db/schema";
+
+export async function listServices() {
+  return db.select().from(service).orderBy(desc(service.createdAt));
+}
+export async function listMetrics() {
+  return db.select().from(impactMetric).orderBy(impactMetric.displayOrder);
+}
+export async function listPartners() {
+  return db.select().from(partner).orderBy(partner.displayOrder);
+}
+export async function listEpisodes() {
+  return db
+    .select()
+    .from(liveShowEpisode)
+    .orderBy(desc(liveShowEpisode.episodeNumber));
+}
+export async function listOpportunitiesAll() {
+  return db.select().from(opportunity).orderBy(desc(opportunity.createdAt));
+}
+export async function listPolicies() {
+  return db.select().from(policy).orderBy(desc(policy.createdAt));
+}
+export async function listCampaigns() {
+  return db
+    .select()
+    .from(newsletterCampaign)
+    .orderBy(desc(newsletterCampaign.createdAt));
+}
+export async function listIncidents() {
+  return db.select().from(incident).orderBy(desc(incident.createdAt));
+}
+export async function listRisks() {
+  return db.select().from(risk).orderBy(desc(risk.createdAt));
+}
+export async function listExpenses() {
+  return db.select().from(expenseClaim).orderBy(desc(expenseClaim.createdAt));
+}
+export async function listSupportRequests() {
+  return db
+    .select()
+    .from(supportRequest)
+    .orderBy(desc(supportRequest.createdAt));
+}
+
+export async function listCohortSessions(cohortId: string) {
+  return db
+    .select()
+    .from(cohortSession)
+    .where(eq(cohortSession.cohortId, cohortId))
+    .orderBy(cohortSession.sequence);
+}
+
+export async function listProductsWithVariants() {
+  const products = await db.select().from(product).orderBy(desc(product.createdAt));
+  const variants = await db.select().from(productVariant);
+  return products.map((p) => ({
+    product: p,
+    variants: variants.filter((v) => v.productId === p.id),
+  }));
+}
+
+export async function listContentPages() {
+  return db
+    .select({
+      item: contentItem,
+      title: contentTranslation.title,
+    })
+    .from(contentItem)
+    .leftJoin(
+      contentTranslation,
+      and(
+        eq(contentTranslation.contentId, contentItem.id),
+        eq(contentTranslation.locale, "en"),
+      ),
+    )
+    .orderBy(desc(contentItem.createdAt));
+}
+
+export async function getContentForEdit(id: string) {
+  const rows = await db
+    .select({ item: contentItem, tr: contentTranslation })
+    .from(contentItem)
+    .leftJoin(
+      contentTranslation,
+      and(
+        eq(contentTranslation.contentId, contentItem.id),
+        eq(contentTranslation.locale, "en"),
+      ),
+    )
+    .where(eq(contentItem.id, id))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getById<T extends { id: string }>(
+  rows: T[],
+  id?: string,
+) {
+  if (!id) return null;
+  return rows.find((r) => r.id === id) ?? null;
+}
+
+
+import { user as authUser, roleAssignment } from "@/db/schema";
+
+export async function listUsersWithRoles() {
+  const users = await db
+    .select({
+      userId: authUser.id,
+      email: authUser.email,
+      name: authUser.name,
+      personId: person.id,
+      displayName: person.displayName,
+    })
+    .from(authUser)
+    .leftJoin(person, eq(person.userId, authUser.id))
+    .orderBy(desc(authUser.createdAt))
+    .limit(200);
+
+  const roles = await db
+    .select({
+      id: roleAssignment.id,
+      personId: roleAssignment.personId,
+      role: roleAssignment.role,
+    })
+    .from(roleAssignment);
+
+  return users.map((u) => ({
+    ...u,
+    roles: roles.filter((r) => r.personId === u.personId),
+  }));
 }

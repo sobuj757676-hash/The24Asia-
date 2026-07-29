@@ -137,3 +137,44 @@ export async function toggleFlag(key: string, enabled: boolean): Promise<void> {
   });
   revalidatePath("/admin/flags");
 }
+
+
+import { roleAssignment } from "@/db/schema";
+
+/** Grant a role to a person (PRD 11, role:grant). Audited. */
+export async function grantRole(personId: string, role: string): Promise<void> {
+  const staff = await requirePermission("role:grant");
+  await db.insert(roleAssignment).values({
+    personId,
+    role: role as never,
+    grantedBy: staff.personId,
+  });
+  await audit({
+    actorId: staff.personId,
+    actorRole: "admin",
+    action: "role.granted",
+    objectType: "person",
+    objectId: personId,
+    context: { role },
+  });
+  revalidatePath("/admin/users");
+}
+
+export async function revokeRole(assignmentId: string): Promise<void> {
+  const staff = await requirePermission("role:grant");
+  const rows = await db
+    .select({ personId: roleAssignment.personId, role: roleAssignment.role })
+    .from(roleAssignment)
+    .where(eq(roleAssignment.id, assignmentId))
+    .limit(1);
+  await db.delete(roleAssignment).where(eq(roleAssignment.id, assignmentId));
+  await audit({
+    actorId: staff.personId,
+    actorRole: "admin",
+    action: "role.revoked",
+    objectType: "role_assignment",
+    objectId: assignmentId,
+    context: rows[0] ? { role: rows[0].role } : undefined,
+  });
+  revalidatePath("/admin/users");
+}

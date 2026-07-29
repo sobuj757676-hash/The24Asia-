@@ -1,7 +1,9 @@
 import { setRequestLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { requirePermission } from "@/lib/auth/session";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/misc";
+import { Button } from "@/components/ui/button";
 import { VolunteerReviewButtons } from "@/components/admin/review-buttons";
 import { getPendingVolunteerApplications } from "@/server/queries/admin";
 
@@ -18,7 +20,12 @@ export default async function AdminVolunteers({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold">Volunteers</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-extrabold">Volunteers</h1>
+        <Button asChild size="sm" variant="outline">
+          <Link href="/admin/volunteers/opportunities">Manage opportunities</Link>
+        </Button>
+      </div>
       <section>
         <h2 className="mb-3 text-lg font-bold">
           Applications to review ({pending.length})
