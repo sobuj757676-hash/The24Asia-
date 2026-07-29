@@ -8,6 +8,7 @@ import {
   getMyVolunteerProfile,
   getMyHours,
   getMyShifts,
+  getMyRecognition,
 } from "@/server/queries/portal";
 
 export default async function VolunteerDashboard({
@@ -20,10 +21,11 @@ export default async function VolunteerDashboard({
   const t = await getTranslations("portal");
   const user = await requireUser();
 
-  const [profile, hours, shifts] = await Promise.all([
+  const [profile, hours, shifts, recognitions] = await Promise.all([
     getMyVolunteerProfile(user.personId),
     getMyHours(user.personId),
     getMyShifts(user.personId),
+    getMyRecognition(user.personId),
   ]);
 
   const approvedHours = hours
@@ -55,12 +57,24 @@ export default async function VolunteerDashboard({
         </Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* Handbook nudge (VOL-005) */}
+      {profile && !profile.handbookAcknowledgedAt && (
+        <Card>
+          <CardBody className="flex items-center justify-between gap-3">
+            <p className="text-sm">
+              Please acknowledge the volunteer handbook & code of conduct.
+            </p>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/volunteer-portal/profile">Review & acknowledge</Link>
+            </Button>
+          </CardBody>
+        </Card>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardBody>
-            <p className="text-3xl font-bold text-brand-600">
-              {approvedHours}
-            </p>
+            <p className="text-3xl font-bold text-brand-600">{approvedHours}</p>
             <p className="text-sm text-[var(--muted)]">Approved hours</p>
           </CardBody>
         </Card>
@@ -72,12 +86,24 @@ export default async function VolunteerDashboard({
         </Card>
         <Card>
           <CardBody>
+            <p className="text-3xl font-bold text-brand-600">{recognitions.length}</p>
+            <p className="text-sm text-[var(--muted)]">Recognitions</p>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
             <p className="text-3xl font-bold text-brand-600">
               {profile?.team ?? "—"}
             </p>
             <p className="text-sm text-[var(--muted)]">Team</p>
           </CardBody>
         </Card>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button asChild size="sm" variant="outline"><Link href="/volunteer-portal/shifts">Find shifts</Link></Button>
+        <Button asChild size="sm" variant="outline"><Link href="/volunteer-portal/hours">Log hours</Link></Button>
+        <Button asChild size="sm" variant="outline"><Link href="/volunteer-portal/report">Report a concern</Link></Button>
       </div>
     </div>
   );

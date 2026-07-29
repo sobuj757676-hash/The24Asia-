@@ -18,7 +18,20 @@ import {
   liveShowEpisode,
   partner,
   award,
+  campaign,
+  product,
+  productVariant,
+  group,
+  opportunityListing,
+  learningPath,
+  learningPathStep,
+  assessment,
+  assessmentQuestion,
+  policy,
+  contentItem,
+  contentTranslation,
 } from "./schema";
+import { eq, sql } from "drizzle-orm";
 import { FLAGS } from "@/lib/flag-keys";
 
 function daysFromNow(n: number, hour = 10) {
@@ -30,6 +43,16 @@ function daysFromNow(n: number, hour = 10) {
 
 async function main() {
   console.log("Seeding 24Asia baseline data…");
+
+  // Idempotent reset of demo content (CASCADE clears dependent rows).
+  // Auth/person/role data is preserved.
+  await db.execute(sql`
+    TRUNCATE TABLE
+      course, event, opportunity, product, "group", learning_path,
+      assessment, impact_metric, service, partner, award,
+      live_show_episode, campaign, opportunity_listing, policy, content_item
+    RESTART IDENTITY CASCADE
+  `);
 
   // ---- Feature flags (all high-risk capabilities OFF, PRD 30.2) ----
   await db
@@ -466,6 +489,179 @@ async function main() {
       displayOrder: 1,
     },
   ]);
+
+  // ---- Enable all capabilities by default (company toggles in admin) ----
+  await db.update(featureFlag).set({ enabled: true });
+
+  // ---- Campaign (fundraising) ----
+  await db.delete(campaign);
+  await db.insert(campaign).values([
+    {
+      slug: "free-training-fund-2026",
+      title: "Free Training Fund 2026",
+      description: "Help us train 2,000 more migrant workers this year.",
+      goalAmountCents: 5000000,
+      raisedAmountCents: 1200000,
+      currency: "SGD",
+      active: true,
+    },
+  ]);
+
+  // ---- Shop products + variants ----
+  await db.delete(product);
+  const [tshirt] = await db
+    .insert(product)
+    .values({
+      slug: "24asia-volunteer-tshirt",
+      name: "24Asia Volunteer T-Shirt",
+      description: "Soft cotton tee in 24Asia green. Proceeds fund free training.",
+      priceCents: 1500,
+      published: true,
+    })
+    .returning({ id: product.id });
+  await db.insert(productVariant).values([
+    { productId: tshirt.id, sku: "TS-S", label: "S", stock: 40 },
+    { productId: tshirt.id, sku: "TS-M", label: "M", stock: 60 },
+    { productId: tshirt.id, sku: "TS-L", label: "L", stock: 50 },
+    { productId: tshirt.id, sku: "TS-XL", label: "XL", stock: 30 },
+  ]);
+
+  // ---- Community group ----
+  await db.delete(group);
+  await db.insert(group).values([
+    {
+      slug: "new-arrivals",
+      name: "New Arrivals Support",
+      purpose: "A friendly space for workers new to Singapore to ask questions.",
+      rules: "Be kind. No sharing of personal contact details. English or your language welcome.",
+      preModerate: true,
+      active: true,
+    },
+    {
+      slug: "skills-study-group",
+      name: "Skills Study Group",
+      purpose: "Practise together between training sessions.",
+      preModerate: false,
+      active: true,
+    },
+  ]);
+
+  // ---- Career opportunity listing ----
+  await db.delete(opportunityListing);
+  await db.insert(opportunityListing).values([
+    {
+      title: "Warehouse Assistant (Verified Employer)",
+      description: "Full-time role with a 24Asia-verified logistics partner.",
+      roleType: "job",
+      compensation: "As per MOM guidelines",
+      eligibility: "Valid work pass",
+      accountableContact: "careers@partner.example",
+      feeDeclaration: "No fees charged to workers.",
+      verified: true,
+      published: true,
+    },
+  ]);
+
+  // ---- Assessment for the Excel course ----
+  await db.delete(assessment);
+  const excel = await db
+    .select({ id: course.id })
+    .from(course)
+    .where(eq(course.slug, "microsoft-excel"))
+    .limit(1);
+  if (excel[0]) {
+    const [a] = await db
+      .insert(assessment)
+      .values({
+        courseId: excel[0].id,
+        title: "Excel Basics Quiz",
+        type: "quiz",
+        passMark: 60,
+        published: true,
+      })
+      .returning({ id: assessment.id });
+    await db.insert(assessmentQuestion).values([
+      {
+        assessmentId: a.id,
+        sequence: 1,
+        prompt: "Which symbol starts a formula in Excel?",
+        choices: ["=", "+", "#", "@"],
+        correctIndex: 0,
+      },
+      {
+        assessmentId: a.id,
+        sequence: 2,
+        prompt: "Which function adds a range of numbers?",
+        choices: ["AVERAGE", "SUM", "COUNT", "MAX"],
+        correctIndex: 1,
+      },
+      {
+        assessmentId: a.id,
+        sequence: 3,
+        prompt: "How do you make text bold?",
+        choices: ["Ctrl+I", "Ctrl+U", "Ctrl+B", "Ctrl+K"],
+        correctIndex: 2,
+      },
+    ]);
+  }
+
+  // ---- Learning pathway ----
+  await db.delete(learningPath);
+  const [path] = await db
+    .insert(learningPath)
+    .values({
+      slug: "office-ready",
+      title: "Office Ready",
+      description: "Build the core digital skills for office and admin roles.",
+      published: true,
+      displayOrder: 1,
+    })
+    .returning({ id: learningPath.id });
+  const pathCourses = await db
+    .select({ id: course.id, slug: course.slug })
+    .from(course);
+  const order = ["computer-fundamentals", "microsoft-word", "microsoft-excel", "public-speaking"];
+  let seq = 0;
+  for (const slug of order) {
+    const c = pathCourses.find((x) => x.slug === slug);
+    if (c) {
+      await db.insert(learningPathStep).values({ pathId: path.id, courseId: c.id, sequence: seq++ });
+    }
+  }
+
+  // ---- Policy ----
+  await db.delete(policy);
+  await db.insert(policy).values([
+    {
+      slug: "volunteer-code-of-conduct",
+      title: "Volunteer Code of Conduct",
+      body: "All volunteers commit to safety, respect, confidentiality and integrity.",
+      version: "1.0",
+      effectiveAt: new Date(),
+      published: true,
+    },
+  ]);
+
+  // ---- Stories / news (CMS) ----
+  const [story] = await db
+    .insert(contentItem)
+    .values({
+      type: "story",
+      slug: "5300-migrants-trained",
+      status: "published",
+      category: "impact",
+      publishedAt: new Date(),
+    })
+    .returning({ id: contentItem.id });
+  await db.insert(contentTranslation).values({
+    contentId: story.id,
+    locale: "en",
+    title: "5,300 migrant workers trained and counting",
+    summary: "A look at how free training is changing lives in Singapore's migrant community.",
+    body:
+      "Since our first batch, 24Asia volunteers have delivered free digital, safety and communication training to over 5,300 migrant workers.\n\nThis is only possible because of hundreds of volunteers who give their time every week. Thank you to everyone who makes it happen.",
+    status: "published",
+  });
 
   console.log("Seed complete ✓");
 }

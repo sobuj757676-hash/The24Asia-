@@ -18,11 +18,18 @@ const schema = z.object({
   // Web push (PWA notifications). Optional in dev.
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().default("mailto:hello@24asia.org"),
 
   // Transactional email. Optional in dev - falls back to console transport.
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("24asia <no-reply@24asia.org>"),
+
+  // Payments (Stripe). When unset, the platform runs in TEST payment mode so
+  // the full donation/checkout flow works without a live processor.
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
 
   // Object storage for media uploads (S3 compatible: R2, Supabase, MinIO).
   S3_ENDPOINT: z.string().optional(),

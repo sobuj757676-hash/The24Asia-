@@ -1,8 +1,10 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Badge, EmptyState } from "@/components/ui/misc";
+import { ActionButton } from "@/components/admin/row-actions";
 import { requireUser } from "@/lib/auth/session";
 import { getMyEventRegistrations } from "@/server/queries/portal";
+import { cancelEventRegistration } from "@/server/actions/learner";
 import { formatDate } from "@/lib/utils";
 
 export default async function MyEventsPage({
@@ -35,7 +37,18 @@ export default async function MyEventsPage({
                   · {event.locationName}
                 </p>
               </div>
-              <Badge>{registration.status.replace(/_/g, " ")}</Badge>
+              <div className="flex items-center gap-2">
+                <Badge>{registration.status.replace(/_/g, " ")}</Badge>
+                {(registration.status === "registered" || registration.status === "waitlisted") && (
+                  <ActionButton
+                    action={cancelEventRegistration.bind(null, registration.id, undefined)}
+                    label="Cancel"
+                    variant="ghost"
+                    confirm="Cancel this registration?"
+                    successMessage="Cancelled"
+                  />
+                )}
+              </div>
             </CardBody>
           </Card>
         ))

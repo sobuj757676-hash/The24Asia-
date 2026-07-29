@@ -1,8 +1,10 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Badge, EmptyState } from "@/components/ui/misc";
+import { ActionButton } from "@/components/admin/row-actions";
 import { requireUser } from "@/lib/auth/session";
 import { getMyEnrollments } from "@/server/queries/portal";
+import { withdrawEnrollment } from "@/server/actions/learner";
 import { formatDate } from "@/lib/utils";
 
 export default async function MyCoursesPage({
@@ -32,11 +34,22 @@ export default async function MyCoursesPage({
                   {cohort.startDate ? formatDate(cohort.startDate, locale) : "TBA"}
                 </p>
               </div>
-              <Badge
-                tone={enrollment.status === "completed" ? "success" : "brand"}
-              >
-                {enrollment.status.replace(/_/g, " ")}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge
+                  tone={enrollment.status === "completed" ? "success" : "brand"}
+                >
+                  {enrollment.status.replace(/_/g, " ")}
+                </Badge>
+                {(enrollment.status === "enrolled" || enrollment.status === "offered") && (
+                  <ActionButton
+                    action={withdrawEnrollment.bind(null, enrollment.id)}
+                    label="Withdraw"
+                    variant="ghost"
+                    confirm="Withdraw from this course?"
+                    successMessage="Withdrawn"
+                  />
+                )}
+              </div>
             </CardBody>
           </Card>
         ))

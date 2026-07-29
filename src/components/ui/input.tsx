@@ -31,6 +31,23 @@ export const Textarea = React.forwardRef<
 ));
 Textarea.displayName = "Textarea";
 
+export const Select = React.forwardRef<
+  HTMLSelectElement,
+  React.SelectHTMLAttributes<HTMLSelectElement>
+>(({ className, children, ...props }, ref) => (
+  <select
+    ref={ref}
+    className={cn(
+      "flex h-11 w-full rounded-xl border border-ink-300 bg-[var(--card)] px-3 text-base outline-none focus-visible:border-brand-600 disabled:opacity-50",
+      className,
+    )}
+    {...props}
+  >
+    {children}
+  </select>
+));
+Select.displayName = "Select";
+
 /** Accessible field wrapper with label + error + hint (PRD 15). */
 export function Field({
   label,

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Menu, X, LogIn } from "lucide-react";
+import { Menu, X, LogIn, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "./language-switcher";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,13 @@ export function SiteHeader({ isAuthed }: { isAuthed: boolean }) {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/search"
+            aria-label={tc("search")}
+            className="grid size-11 place-items-center rounded-xl hover:bg-ink-100 dark:hover:bg-ink-800"
+          >
+            <Search className="size-5" aria-hidden />
+          </Link>
           <div className="hidden sm:block">
             <LanguageSwitcher />
           </div>
