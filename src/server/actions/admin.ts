@@ -12,6 +12,7 @@ import {
 } from "@/db/schema";
 import { requirePermission } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
+import { notify } from "@/lib/notify/notifications";
 
 /**
  * Approve a course application and create an enrollment, reserving capacity
@@ -61,6 +62,14 @@ export async function decideCourseApplication(
       });
     }
   }
+
+  await notify({
+    personId: app.personId,
+    templateKey: "course_application.decided",
+    title: `Your course application was ${decision}`,
+    body: reason ?? undefined,
+    linkUrl: "/account",
+  });
 
   await audit({
     actorId: staff.personId,

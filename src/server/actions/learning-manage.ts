@@ -18,6 +18,7 @@ import {
 } from "@/db/schema";
 import { requirePermission } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
+import { notify } from "@/lib/notify/notifications";
 import { slugify } from "@/lib/utils";
 
 const codeGen = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 8);
@@ -183,6 +184,14 @@ export async function issueCertificate(enrollmentId: string) {
     .update(enrollment)
     .set({ status: "completed", completedAt: new Date() })
     .where(eq(enrollment.id, enrollmentId));
+
+  await notify({
+    personId: e.personId,
+    templateKey: "certificate.issued",
+    title: "Your certificate is ready",
+    body: `Certificate for ${e.courseTitle}`,
+    linkUrl: "/account/certificates",
+  });
 
   await audit({ actorId: staff.personId, action: "certificate.issued", objectType: "certificate", objectId: code });
   revalidatePath("/admin/programs/certificates");

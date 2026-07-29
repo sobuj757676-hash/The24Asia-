@@ -18,6 +18,7 @@ const schema = z.object({
   // Web push (PWA notifications). Optional in dev.
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().default("mailto:hello@24asia.org"),
 
   // Transactional email. Optional in dev - falls back to console transport.

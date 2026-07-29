@@ -50,3 +50,28 @@ self.addEventListener("fetch", (event) => {
 });
 
 serwist.addEventListeners();
+
+// Web push (PRD 24.2). Payload is a small JSON { title, body, url }.
+self.addEventListener("push", (event: PushEvent) => {
+  if (!event.data) return;
+  let data: { title?: string; body?: string; url?: string } = {};
+  try {
+    data = event.data.json();
+  } catch {
+    data = { title: "24Asia", body: event.data.text() };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title ?? "24Asia", {
+      body: data.body ?? "",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { url: data.url ?? "/" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event: NotificationEvent) => {
+  event.notification.close();
+  const url = (event.notification.data as { url?: string })?.url ?? "/";
+  event.waitUntil(self.clients.openWindow(url));
+});

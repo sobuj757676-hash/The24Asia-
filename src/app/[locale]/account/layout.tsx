@@ -29,6 +29,7 @@ export default async function AccountLayout({
     { href: "/account/events", label: t("myEvents") },
     { href: "/account/career", label: "Career" },
     { href: "/account/support", label: "Support" },
+    { href: "/account/notifications", label: "Notifications" },
     { href: "/account/preferences", label: t("preferences") },
   ];
 

@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { NewsletterSignup } from "./newsletter-signup";
 
 export function SiteFooter() {
   const t = useTranslations("nav");
@@ -49,6 +50,12 @@ export function SiteFooter() {
             24Asia
           </div>
           <p className="mt-3 text-sm text-[var(--muted)]">{tc("tagline")}</p>
+          <div className="mt-4">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Newsletter
+            </p>
+            <NewsletterSignup />
+          </div>
         </div>
         {cols.map((col) => (
           <div key={col.heading}>
