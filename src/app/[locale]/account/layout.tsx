@@ -27,6 +27,7 @@ export default async function AccountLayout({
     { href: "/account/assessments", label: "Assessments" },
     { href: "/account/certificates", label: t("myCertificates") },
     { href: "/account/events", label: t("myEvents") },
+    { href: "/account/career", label: "Career" },
     { href: "/account/support", label: "Support" },
     { href: "/account/preferences", label: t("preferences") },
   ];

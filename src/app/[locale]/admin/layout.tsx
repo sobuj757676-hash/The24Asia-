@@ -29,6 +29,7 @@ export default async function AdminLayout({
     { href: "/admin/shop", label: "Shop" },
     { href: "/admin/finance", label: "Finance" },
     { href: "/admin/support", label: "Support" },
+    { href: "/admin/career", label: "Career" },
     { href: "/admin/community", label: "Community" },
     { href: "/admin/comms", label: "Communications" },
     { href: "/admin/governance", label: "Governance" },
