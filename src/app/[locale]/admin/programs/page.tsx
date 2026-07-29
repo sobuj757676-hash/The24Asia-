@@ -37,7 +37,21 @@ export default async function AdminPrograms({
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-extrabold">Programs & learning</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-extrabold">Programs & learning</h1>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { href: "/admin/programs/assessments", label: "Assessments" },
+            { href: "/admin/programs/certificates", label: "Certificates" },
+            { href: "/admin/programs/materials", label: "Materials" },
+            { href: "/admin/programs/pathways", label: "Pathways" },
+          ].map((l) => (
+            <Button key={l.href} asChild size="sm" variant="outline">
+              <Link href={l.href}>{l.label}</Link>
+            </Button>
+          ))}
+        </div>
+      </div>
 
       {/* Application review */}
       <section>
