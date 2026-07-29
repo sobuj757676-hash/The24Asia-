@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { PortalShell } from "@/components/portal/portal-shell";
+import { setRequestLocale } from "next-intl/server";
+import { AppShell } from "@/components/shell/app-shell";
 import { getCurrentUser } from "@/lib/auth/session";
 import { ensurePerson } from "@/lib/auth/onboarding";
+import { availablePanels } from "@/lib/auth/panels";
 
 export default async function AccountLayout({
   children,
@@ -16,29 +17,16 @@ export default async function AccountLayout({
 
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in?redirect=/account");
-  // Lazily create the person profile on first authenticated visit.
   if (!user.personId) await ensurePerson(user.userId, user.name);
 
-  const t = await getTranslations("portal");
-  const nav = [
-    { href: "/account", label: t("learnerDashboard") },
-    { href: "/account/courses", label: t("myCourses") },
-    { href: "/account/attendance", label: t("attendanceRecord") },
-    { href: "/account/materials", label: "Materials" },
-    { href: "/account/assessments", label: "Assessments" },
-    { href: "/account/certificates", label: t("myCertificates") },
-    { href: "/account/events", label: t("myEvents") },
-    { href: "/account/career", label: "Career" },
-    { href: "/account/support", label: "Support" },
-    { href: "/account/notifications", label: "Notifications" },
-    { href: "/account/profile", label: "Profile" },
-    { href: "/account/preferences", label: t("preferences") },
-    { href: "/account/privacy", label: "Privacy & data" },
-  ];
-
   return (
-    <PortalShell title="24Asia" nav={nav}>
+    <AppShell
+      panel="account"
+      title="My account"
+      user={{ name: user.displayName || user.name, email: user.email }}
+      panels={availablePanels(user.roles)}
+    >
       {children}
-    </PortalShell>
+    </AppShell>
   );
 }

@@ -2,10 +2,10 @@ import { redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { AppShell } from "@/components/shell/app-shell";
 import { getCurrentUser } from "@/lib/auth/session";
-import { isStaff } from "@/lib/auth/permissions";
+import { ensurePerson } from "@/lib/auth/onboarding";
 import { availablePanels } from "@/lib/auth/panels";
 
-export default async function AdminLayout({
+export default async function PartnerPortalLayout({
   children,
   params,
 }: {
@@ -16,13 +16,13 @@ export default async function AdminLayout({
   setRequestLocale(locale);
 
   const user = await getCurrentUser();
-  if (!user) redirect("/sign-in?redirect=/admin");
-  if (!isStaff(user.roles)) redirect("/account");
+  if (!user) redirect("/sign-in?redirect=/partner-portal");
+  if (!user.personId) await ensurePerson(user.userId, user.name);
 
   return (
     <AppShell
-      panel="admin"
-      title="Admin"
+      panel="partner"
+      title="Partner portal"
       user={{ name: user.displayName || user.name, email: user.email }}
       panels={availablePanels(user.roles)}
     >
