@@ -146,3 +146,55 @@ export async function listMaterialsAll() {
     .leftJoin(course, eq(learningMaterial.courseId, course.id))
     .orderBy(desc(learningMaterial.createdAt));
 }
+
+
+import { cohortSession, attendance } from "@/db/schema";
+
+export async function getCohortDetail(cohortId: string) {
+  const rows = await db
+    .select({ cohort, course })
+    .from(cohort)
+    .innerJoin(course, eq(cohort.courseId, course.id))
+    .where(eq(cohort.id, cohortId))
+    .limit(1);
+  if (!rows[0]) return null;
+  const sessions = await db
+    .select()
+    .from(cohortSession)
+    .where(eq(cohortSession.cohortId, cohortId))
+    .orderBy(cohortSession.sequence);
+  return { ...rows[0], sessions };
+}
+
+/** Roster for a session: enrolled learners + their attendance status. */
+export async function getSessionRoster(sessionId: string) {
+  const [sess] = await db
+    .select()
+    .from(cohortSession)
+    .where(eq(cohortSession.id, sessionId))
+    .limit(1);
+  if (!sess) return null;
+
+  const learners = await db
+    .select({ personId: enrollment.personId, name: person.displayName })
+    .from(enrollment)
+    .innerJoin(person, eq(enrollment.personId, person.id))
+    .where(
+      and(
+        eq(enrollment.cohortId, sess.cohortId),
+        // active enrolments only
+        inArray(enrollment.status, ["enrolled", "offered", "completed"] as never),
+      ),
+    );
+
+  const marks = await db
+    .select({ personId: attendance.personId, status: attendance.status })
+    .from(attendance)
+    .where(eq(attendance.sessionId, sessionId));
+  const markMap = new Map(marks.map((m) => [m.personId, m.status]));
+
+  return {
+    session: sess,
+    roster: learners.map((l) => ({ ...l, status: markMap.get(l.personId) ?? "expected" })),
+  };
+}

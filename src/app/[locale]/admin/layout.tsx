@@ -34,6 +34,7 @@ export default async function AdminLayout({
     { href: "/admin/comms", label: "Communications" },
     { href: "/admin/governance", label: "Governance" },
     { href: "/admin/assets", label: "Assets" },
+    { href: "/admin/reports", label: "Reports" },
     { href: "/admin/people", label: t("people") },
     { href: "/admin/users", label: t("users") },
     { href: "/admin/audit", label: t("audit") },

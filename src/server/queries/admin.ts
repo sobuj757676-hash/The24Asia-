@@ -306,3 +306,74 @@ export async function listPendingHours() {
     .where(eq(timeEntry.approved, false))
     .orderBy(desc(timeEntry.createdAt));
 }
+
+
+export async function getEventRoster(eventId: string) {
+  const [ev] = await db.select().from(event).where(eq(event.id, eventId)).limit(1);
+  if (!ev) return null;
+  const regs = await db
+    .select({ reg: eventRegistration, name: person.displayName })
+    .from(eventRegistration)
+    .leftJoin(person, eq(eventRegistration.personId, person.id))
+    .where(eq(eventRegistration.eventId, eventId))
+    .orderBy(desc(eventRegistration.createdAt));
+  return { event: ev, registrations: regs };
+}
+
+
+import {
+  volunteerProfile,
+  timeEntry as timeEntryTable,
+  attendance as attendanceTable,
+} from "@/db/schema";
+
+export async function getReportMetrics() {
+  const scalar = async (q: Promise<{ n: number }[]>) => (await q)[0]?.n ?? 0;
+
+  const [
+    apps,
+    approvedApps,
+    enrolled,
+    completed,
+    present,
+    totalMarks,
+    volApps,
+    activeVols,
+    approvedHours,
+    donatedCents,
+    donationCount,
+    publishedCourses,
+    publishedContent,
+  ] = await Promise.all([
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(courseApplication)),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(courseApplication).where(eq(courseApplication.status, "approved"))),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(enrollment)),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(enrollment).where(eq(enrollment.status, "completed"))),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(attendanceTable).where(sql`${attendanceTable.status} in ('present','checked_in','late')`)),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(attendanceTable)),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(volunteerApplication)),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(volunteerProfile).where(eq(volunteerProfile.standing, "active"))),
+    scalar(db.select({ n: sql<number>`coalesce(sum(${timeEntryTable.hours}),0)::int` }).from(timeEntryTable).where(eq(timeEntryTable.approved, true))),
+    scalar(db.select({ n: sql<number>`coalesce(sum(${donation.amountCents}),0)::int` }).from(donation).where(eq(donation.status, "completed"))),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(donation).where(eq(donation.status, "completed"))),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(course).where(eq(course.published, true))),
+    scalar(db.select({ n: sql<number>`count(*)::int` }).from(contentItem).where(eq(contentItem.status, "published"))),
+  ]);
+
+  return {
+    programs: { apps, approvedApps, enrolled, completed },
+    attendance: { present, totalMarks, rate: totalMarks ? Math.round((present / totalMarks) * 100) : 0 },
+    volunteers: { volApps, activeVols, approvedHours },
+    donations: { donatedCents, donationCount },
+    content: { publishedCourses, publishedContent },
+  };
+}
+
+
+export async function listActiveVolunteers() {
+  return db
+    .select({ personId: volunteerProfile.personId, name: person.displayName, standing: volunteerProfile.standing })
+    .from(volunteerProfile)
+    .innerJoin(person, eq(volunteerProfile.personId, person.id))
+    .orderBy(person.displayName);
+}

@@ -5,7 +5,9 @@ import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/misc";
 import { Button } from "@/components/ui/button";
 import { VolunteerReviewButtons } from "@/components/admin/review-buttons";
-import { getPendingVolunteerApplications } from "@/server/queries/admin";
+import { Field, Input, Select } from "@/components/ui/input";
+import { getPendingVolunteerApplications, listActiveVolunteers } from "@/server/queries/admin";
+import { awardRecognition } from "@/server/actions/attendance";
 
 export default async function AdminVolunteers({
   params,
@@ -16,7 +18,10 @@ export default async function AdminVolunteers({
   setRequestLocale(locale);
   await requirePermission("volunteer:review");
 
-  const pending = await getPendingVolunteerApplications();
+  const [pending, volunteers] = await Promise.all([
+    getPendingVolunteerApplications(),
+    listActiveVolunteers(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -62,6 +67,43 @@ export default async function AdminVolunteers({
             ))}
           </div>
         )}
+      </section>
+
+      {/* Award recognition (VOL-014) */}
+      <section>
+        <h2 className="mb-3 text-lg font-bold">Award recognition</h2>
+        <Card>
+          <CardBody>
+            {volunteers.length === 0 ? (
+              <EmptyState title="No active volunteers yet" />
+            ) : (
+              <form action={awardRecognition} className="grid gap-3 sm:grid-cols-3">
+                <Field label="Volunteer" htmlFor="personId">
+                  <Select id="personId" name="personId">
+                    {volunteers.map((v) => (
+                      <option key={v.personId} value={v.personId}>
+                        {v.name ?? "Volunteer"} ({v.standing})
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Kind" htmlFor="kind">
+                  <Select id="kind" name="kind" defaultValue="appreciation">
+                    <option value="appreciation">Appreciation</option>
+                    <option value="milestone">Milestone</option>
+                    <option value="badge">Badge</option>
+                  </Select>
+                </Field>
+                <Field label="Label" htmlFor="label">
+                  <Input id="label" name="label" placeholder="e.g. 100 hours served" />
+                </Field>
+                <div className="sm:col-span-3">
+                  <Button type="submit" size="sm">Award recognition</Button>
+                </div>
+              </form>
+            )}
+          </CardBody>
+        </Card>
       </section>
     </div>
   );

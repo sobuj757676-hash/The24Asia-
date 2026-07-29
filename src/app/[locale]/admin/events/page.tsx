@@ -113,6 +113,7 @@ export default async function AdminEvents({
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-[var(--muted)]">{countMap.get(e.id) ?? 0} registered</span>
                   <Badge>{e.status.replace(/_/g, " ")}</Badge>
+                  <Button asChild size="sm" variant="outline"><Link href={`/admin/events/${e.id}`}>Roster</Link></Button>
                   <Button asChild size="sm" variant="outline"><Link href={`/admin/events?edit=${e.id}`}>Edit</Link></Button>
                   <ActionButton action={deleteEvent.bind(null, e.id)} label="Delete" variant="danger" icon confirm={`Delete "${e.title}"?`} successMessage="Deleted" />
                 </div>

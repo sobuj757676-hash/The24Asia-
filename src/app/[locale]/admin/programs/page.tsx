@@ -210,7 +210,12 @@ export default async function AdminPrograms({
                   <p className="font-semibold">{course.title}</p>
                   <p className="text-sm text-[var(--muted)]">{cohort.code} · {cohort.locationName}</p>
                 </div>
-                <Badge>{cohort.status.replace(/_/g, " ")}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge>{cohort.status.replace(/_/g, " ")}</Badge>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/admin/programs/cohorts/${cohort.id}`}>Sessions & attendance</Link>
+                  </Button>
+                </div>
               </CardBody>
             </Card>
           ))}
