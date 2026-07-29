@@ -8,6 +8,7 @@ import {
   getMyEnrollments,
   getMyApplications,
   getMyEventRegistrations,
+  getRecommendedCourses,
 } from "@/server/queries/portal";
 import { formatDate } from "@/lib/utils";
 
@@ -21,10 +22,11 @@ export default async function AccountDashboard({
   const t = await getTranslations("portal");
   const user = await requireUser();
 
-  const [enrollments, applications, events] = await Promise.all([
+  const [enrollments, applications, events, recommended] = await Promise.all([
     getMyEnrollments(user.personId),
     getMyApplications(user.personId),
     getMyEventRegistrations(user.personId),
+    getRecommendedCourses(user.personId),
   ]);
 
   return (
@@ -105,6 +107,25 @@ export default async function AccountDashboard({
           </div>
         )}
       </section>
+
+      {recommended.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-lg font-bold">Recommended for you</h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {recommended.map((c) => (
+              <Card key={c.id}>
+                <CardBody>
+                  <CardTitle className="text-base">{c.title}</CardTitle>
+                  <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">{c.summary}</p>
+                  <Button asChild size="sm" variant="outline" className="mt-3">
+                    <Link href={`/learn/${c.slug}`}>View course</Link>
+                  </Button>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

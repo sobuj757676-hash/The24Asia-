@@ -9,7 +9,7 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { timestamps, localeEnum } from "./_shared";
+import { timestamps, softDelete, localeEnum } from "./_shared";
 
 /**
  * Roles (PRD 11.1). A role sets maximum capability; contextual ABAC policies
@@ -68,6 +68,7 @@ export const person = pgTable(
     accessibilityNeeds: text("accessibility_needs"),
 
     ...timestamps,
+    ...softDelete,
   },
   (t) => [uniqueIndex("person_user_idx").on(t.userId)],
 );

@@ -145,3 +145,56 @@ export async function getUpcomingEventsForSignup(personId: string) {
     .limit(20);
   return upcoming.filter((e) => !takenIds.has(e.id));
 }
+
+
+import {
+  attendance,
+  cohortSession,
+  assessmentAttempt,
+  assessment,
+  course as courseTable,
+} from "@/db/schema";
+
+/** Learner attendance history (PRD LMS-013). */
+export async function getMyAttendance(personId: string) {
+  return db
+    .select({
+      attendance,
+      sessionTitle: cohortSession.title,
+      startsAt: cohortSession.startsAt,
+      courseTitle: courseTable.title,
+    })
+    .from(attendance)
+    .innerJoin(cohortSession, eq(attendance.sessionId, cohortSession.id))
+    .innerJoin(cohort, eq(cohortSession.cohortId, cohort.id))
+    .innerJoin(courseTable, eq(cohort.courseId, courseTable.id))
+    .where(eq(attendance.personId, personId))
+    .orderBy(desc(cohortSession.startsAt));
+}
+
+/** Assessment attempt history (PRD LMS-013). */
+export async function getMyAttempts(personId: string) {
+  return db
+    .select({ attempt: assessmentAttempt, title: assessment.title })
+    .from(assessmentAttempt)
+    .innerJoin(assessment, eq(assessmentAttempt.assessmentId, assessment.id))
+    .where(eq(assessmentAttempt.personId, personId))
+    .orderBy(desc(assessmentAttempt.createdAt));
+}
+
+/** Recommend published courses the learner is not yet enrolled in (LMS-013). */
+export async function getRecommendedCourses(personId: string) {
+  const mine = await db
+    .select({ courseId: cohort.courseId })
+    .from(enrollment)
+    .innerJoin(cohort, eq(enrollment.cohortId, cohort.id))
+    .where(eq(enrollment.personId, personId));
+  const taken = new Set(mine.map((m) => m.courseId));
+  const all = await db
+    .select()
+    .from(courseTable)
+    .where(eq(courseTable.published, true))
+    .orderBy(courseTable.displayOrder)
+    .limit(12);
+  return all.filter((c) => !taken.has(c.id)).slice(0, 3);
+}
