@@ -62,3 +62,14 @@ export async function partnerListings(partnerId: string) {
     .where(eq(opportunityListing.partnerId, partnerId))
     .orderBy(desc(opportunityListing.createdAt));
 }
+
+
+import { partnerAgreement } from "@/db/schema";
+
+export async function getPartnerAgreements(partnerId: string) {
+  return db
+    .select()
+    .from(partnerAgreement)
+    .where(eq(partnerAgreement.partnerId, partnerId))
+    .orderBy(desc(partnerAgreement.createdAt));
+}

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/portal/sign-out-button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { ensurePerson } from "@/lib/auth/onboarding";
-import { myPartners, partnerListings } from "@/server/queries/ops";
+import { myPartners, partnerListings, getPartnerAgreements } from "@/server/queries/ops";
 import { submitPartnerListing } from "@/server/actions/ops";
 
 export const metadata = { title: "Partner portal", robots: { index: false } };
@@ -29,6 +29,7 @@ export default async function PartnerPortal({
     partners.map(async ({ partner }) => ({
       partner,
       listings: await partnerListings(partner.id),
+      agreements: await getPartnerAgreements(partner.id),
     })),
   );
 
@@ -53,13 +54,32 @@ export default async function PartnerPortal({
             />
           ) : (
             <div className="space-y-8">
-              {withListings.map(({ partner, listings }) => {
+              {withListings.map(({ partner, listings, agreements }) => {
                 return (
                   <div key={partner.id}>
                     <div className="flex items-center gap-2">
                       <h1 className="text-2xl font-extrabold">{partner.name}</h1>
                       {partner.verified && <Badge tone="success">Verified</Badge>}
                     </div>
+                    {partner.websiteUrl && (
+                      <a href={partner.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-700">
+                        {partner.websiteUrl}
+                      </a>
+                    )}
+
+                    {agreements.length > 0 && (
+                      <div className="mt-4">
+                        <h3 className="font-semibold">Agreements</h3>
+                        <ul className="mt-2 space-y-1 text-sm">
+                          {agreements.map((a) => (
+                            <li key={a.id} className="flex items-center justify-between rounded-lg border bg-[var(--card)] px-3 py-2">
+                              <span>{a.title}</span>
+                              <Badge>{a.type ?? "agreement"}</Badge>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
                     <Card className="mt-4">
                       <CardBody>

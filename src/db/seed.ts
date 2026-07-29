@@ -28,6 +28,8 @@ import {
   assessment,
   assessmentQuestion,
   policy,
+  contentItem,
+  contentTranslation,
 } from "./schema";
 import { eq, sql } from "drizzle-orm";
 import { FLAGS } from "@/lib/flag-keys";
@@ -48,7 +50,7 @@ async function main() {
     TRUNCATE TABLE
       course, event, opportunity, product, "group", learning_path,
       assessment, impact_metric, service, partner, award,
-      live_show_episode, campaign, opportunity_listing, policy
+      live_show_episode, campaign, opportunity_listing, policy, content_item
     RESTART IDENTITY CASCADE
   `);
 
@@ -639,6 +641,27 @@ async function main() {
       published: true,
     },
   ]);
+
+  // ---- Stories / news (CMS) ----
+  const [story] = await db
+    .insert(contentItem)
+    .values({
+      type: "story",
+      slug: "5300-migrants-trained",
+      status: "published",
+      category: "impact",
+      publishedAt: new Date(),
+    })
+    .returning({ id: contentItem.id });
+  await db.insert(contentTranslation).values({
+    contentId: story.id,
+    locale: "en",
+    title: "5,300 migrant workers trained and counting",
+    summary: "A look at how free training is changing lives in Singapore's migrant community.",
+    body:
+      "Since our first batch, 24Asia volunteers have delivered free digital, safety and communication training to over 5,300 migrant workers.\n\nThis is only possible because of hundreds of volunteers who give their time every week. Thank you to everyone who makes it happen.",
+    status: "published",
+  });
 
   console.log("Seed complete ✓");
 }

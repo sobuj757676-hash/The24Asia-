@@ -176,3 +176,76 @@ export async function getProductBySlug(slug: string) {
     .where(eq(productVariant.productId, p.id));
   return { product: p, variants };
 }
+
+
+import { ilike, or } from "drizzle-orm";
+import { contentItem, contentTranslation, policy } from "@/db/schema";
+
+/** Global search across public content (PRD WEB-004/005). */
+export async function searchPublic(q: string) {
+  const term = `%${q}%`;
+  const [courses, events, opps, services, stories] = await Promise.all([
+    db
+      .select({ slug: course.slug, title: course.title })
+      .from(course)
+      .where(and(eq(course.published, true), or(ilike(course.title, term), ilike(course.summary, term))))
+      .limit(8),
+    db
+      .select({ slug: event.slug, title: event.title })
+      .from(event)
+      .where(or(ilike(event.title, term), ilike(event.description, term)))
+      .limit(8),
+    db
+      .select({ slug: opportunity.slug, title: opportunity.title })
+      .from(opportunity)
+      .where(and(eq(opportunity.published, true), or(ilike(opportunity.title, term), ilike(opportunity.purpose, term))))
+      .limit(8),
+    db
+      .select({ name: service.name, id: service.id })
+      .from(service)
+      .where(and(eq(service.published, true), ilike(service.name, term)))
+      .limit(8),
+    db
+      .select({ slug: contentItem.slug, title: contentTranslation.title })
+      .from(contentItem)
+      .innerJoin(contentTranslation, eq(contentTranslation.contentId, contentItem.id))
+      .where(and(eq(contentItem.status, "published"), ilike(contentTranslation.title, term)))
+      .limit(8),
+  ]);
+  return { courses, events, opps, services, stories };
+}
+
+/** Published stories/news (PRD 7.1). */
+export async function listStories() {
+  return db
+    .select({ item: contentItem, title: contentTranslation.title, summary: contentTranslation.summary })
+    .from(contentItem)
+    .innerJoin(contentTranslation, and(eq(contentTranslation.contentId, contentItem.id), eq(contentTranslation.locale, "en")))
+    .where(and(eq(contentItem.status, "published"), or(eq(contentItem.type, "story"), eq(contentItem.type, "news"))))
+    .orderBy(desc(contentItem.publishedAt))
+    .limit(50);
+}
+
+/** A single published CMS item by type + slug. */
+export async function getContentItem(type: string, slug: string) {
+  const rows = await db
+    .select({ item: contentItem, tr: contentTranslation })
+    .from(contentItem)
+    .innerJoin(contentTranslation, and(eq(contentTranslation.contentId, contentItem.id), eq(contentTranslation.locale, "en")))
+    .where(and(eq(contentItem.type, type as never), eq(contentItem.slug, slug), eq(contentItem.status, "published")))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function listPublishedPolicies() {
+  return db.select().from(policy).where(eq(policy.published, true)).orderBy(policy.title);
+}
+
+export async function getPolicyBySlug(slug: string) {
+  const rows = await db
+    .select()
+    .from(policy)
+    .where(and(eq(policy.slug, slug), eq(policy.published, true)))
+    .limit(1);
+  return rows[0] ?? null;
+}
