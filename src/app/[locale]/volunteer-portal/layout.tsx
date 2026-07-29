@@ -24,6 +24,7 @@ export default async function VolunteerPortalLayout({
     { href: "/volunteer-portal/applications", label: t("myApplications") },
     { href: "/volunteer-portal/shifts", label: t("myShifts") },
     { href: "/volunteer-portal/hours", label: t("myHours") },
+    { href: "/volunteer-portal/expenses", label: "Expenses" },
   ];
 
   return (

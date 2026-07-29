@@ -33,6 +33,7 @@ export default async function AdminLayout({
     { href: "/admin/community", label: "Community" },
     { href: "/admin/comms", label: "Communications" },
     { href: "/admin/governance", label: "Governance" },
+    { href: "/admin/assets", label: "Assets" },
     { href: "/admin/people", label: t("people") },
     { href: "/admin/users", label: t("users") },
     { href: "/admin/audit", label: t("audit") },

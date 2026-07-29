@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/misc";
 import { ActionButton } from "@/components/admin/row-actions";
 import { listPartners, getById } from "@/server/queries/admin";
 import { savePartner, deletePartner } from "@/server/actions/manage";
+import { linkPartnerContact } from "@/server/actions/ops";
 
 export default async function AdminPartners({
   params,
@@ -62,16 +63,25 @@ export default async function AdminPartners({
       <div className="space-y-2">
         {partners.map((p) => (
           <Card key={p.id}>
-            <CardBody className="flex items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold">{p.name}</p>
-                <p className="text-sm text-[var(--muted)]">{p.type}</p>
+            <CardBody className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">{p.name}</p>
+                  <p className="text-sm text-[var(--muted)]">{p.type}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge tone={p.displayPublicly ? "success" : "neutral"}>{p.displayPublicly ? "Public" : "Hidden"}</Badge>
+                  <Button asChild size="sm" variant="outline"><Link href={`/admin/content/partners?edit=${p.id}`}>Edit</Link></Button>
+                  <ActionButton action={deletePartner.bind(null, p.id)} label="Delete" variant="danger" icon confirm="Delete partner?" successMessage="Deleted" />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge tone={p.displayPublicly ? "success" : "neutral"}>{p.displayPublicly ? "Public" : "Hidden"}</Badge>
-                <Button asChild size="sm" variant="outline"><Link href={`/admin/content/partners?edit=${p.id}`}>Edit</Link></Button>
-                <ActionButton action={deletePartner.bind(null, p.id)} label="Delete" variant="danger" icon confirm="Delete partner?" successMessage="Deleted" />
-              </div>
+              <form action={linkPartnerContact} className="flex flex-wrap items-end gap-2 border-t pt-3">
+                <input type="hidden" name="partnerId" value={p.id} />
+                <Field label="Link portal contact (email)" htmlFor={`email-${p.id}`}>
+                  <Input id={`email-${p.id}`} name="email" type="email" placeholder="contact@partner.org" className="w-56" />
+                </Field>
+                <Button type="submit" size="sm" variant="ghost">Link contact</Button>
+              </form>
             </CardBody>
           </Card>
         ))}

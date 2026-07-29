@@ -10,7 +10,7 @@ const intlMiddleware = createMiddleware(routing);
  * checks happen server-side in each segment (PRD 10.8); this is only a coarse
  * gate + redirect so unauthenticated users never see portal shells.
  */
-const PROTECTED = /^\/(en|bn|ta)?\/?(admin|account|volunteer-portal)(\/|$)/;
+const PROTECTED = /^\/(en|bn|ta)?\/?(admin|account|volunteer-portal|partner-portal)(\/|$)/;
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

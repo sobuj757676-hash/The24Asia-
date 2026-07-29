@@ -22,9 +22,14 @@ export default async function AdminVolunteers({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold">Volunteers</h1>
-        <Button asChild size="sm" variant="outline">
-          <Link href="/admin/volunteers/opportunities">Manage opportunities</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link href="/admin/volunteers/opportunities">Opportunities</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/admin/volunteers/expenses">Expenses</Link>
+          </Button>
+        </div>
       </div>
       <section>
         <h2 className="mb-3 text-lg font-bold">
