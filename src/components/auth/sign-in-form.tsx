@@ -17,7 +17,7 @@ export function SignInForm() {
   const t = useTranslations("auth");
   const router = useRouter();
   const search = useSearchParams();
-  const redirectTo = search.get("redirect") || "/account";
+  const redirectTo = search.get("redirect") || "/dashboard";
 
   const [method, setMethod] = useState<Method>("email");
   const [step, setStep] = useState<Step>("request");
