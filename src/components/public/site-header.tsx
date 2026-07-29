@@ -63,7 +63,7 @@ export function SiteHeader({ isAuthed }: { isAuthed: boolean }) {
           </Button>
           {isAuthed ? (
             <Button asChild variant="outline" size="sm">
-              <Link href="/account">{t("account")}</Link>
+              <Link href="/dashboard">{t("account")}</Link>
             </Button>
           ) : (
             <Button asChild variant="outline" size="sm">

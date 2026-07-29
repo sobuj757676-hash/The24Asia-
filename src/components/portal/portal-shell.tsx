@@ -2,6 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/ui/misc";
 import { SignOutButton } from "./sign-out-button";
+import { getCurrentUser } from "@/lib/auth/session";
+import { availablePanels } from "@/lib/auth/panels";
 
 type NavItem = { href: string; label: string };
 
@@ -19,19 +21,54 @@ export async function PortalShell({
   children: React.ReactNode;
 }) {
   const tc = await getTranslations("common");
+  const user = await getCurrentUser();
+  const panels = user ? availablePanels(user.roles) : [];
   return (
     <div className="min-h-dvh bg-[var(--background)]">
       <header className="border-b bg-[var(--card)]">
-        <Container className="flex h-14 items-center justify-between">
+        <Container className="flex h-14 items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 font-extrabold text-brand-700">
             <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-white">
               24
             </span>
-            <span>{title}</span>
+            <span className="hidden sm:inline">{title}</span>
           </Link>
-          <SignOutButton label={tc("signOut")} />
+          <div className="flex items-center gap-2">
+            {panels.length > 1 && (
+              <nav aria-label="Switch panel" className="hidden items-center gap-1 sm:flex">
+                {panels.map((p) => (
+                  <Link
+                    key={p.href}
+                    href={p.href}
+                    className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-[var(--muted)] hover:bg-ink-100 hover:text-brand-700 dark:hover:bg-ink-800"
+                  >
+                    {p.label}
+                  </Link>
+                ))}
+              </nav>
+            )}
+            <SignOutButton label={tc("signOut")} />
+          </div>
         </Container>
       </header>
+
+      {panels.length > 1 && (
+        <div className="border-b bg-[var(--card)] sm:hidden">
+          <Container>
+            <nav aria-label="Switch panel" className="flex gap-2 overflow-x-auto py-2">
+              {panels.map((p) => (
+                <Link
+                  key={p.href}
+                  href={p.href}
+                  className="whitespace-nowrap rounded-full border px-3 py-1 text-sm"
+                >
+                  {p.label}
+                </Link>
+              ))}
+            </nav>
+          </Container>
+        </div>
+      )}
 
       <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-6 sm:px-6">
         <aside className="hidden w-56 shrink-0 lg:block">
