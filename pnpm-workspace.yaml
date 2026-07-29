@@ -1,0 +1,6 @@
+onlyBuiltDependencies:
+  - "@swc/core"
+  - "@parcel/watcher"
+  - esbuild
+  - sharp
+  - unrs-resolver
