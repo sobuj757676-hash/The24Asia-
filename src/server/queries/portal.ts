@@ -112,3 +112,36 @@ export async function hasApplied(personId: string, cohortId: string) {
     .limit(1);
   return !!rows[0];
 }
+
+
+import { recognition } from "@/db/schema";
+import { gte, sql } from "drizzle-orm";
+
+export async function getMyRecognition(personId: string) {
+  return db
+    .select()
+    .from(recognition)
+    .where(eq(recognition.personId, personId))
+    .orderBy(desc(recognition.awardedAt));
+}
+
+/** Upcoming events a volunteer can sign up to help at (VOL-009). */
+export async function getUpcomingEventsForSignup(personId: string) {
+  const signedUp = await db
+    .select({ eventId: shiftAssignment.eventId })
+    .from(shiftAssignment)
+    .where(eq(shiftAssignment.personId, personId));
+  const takenIds = new Set(signedUp.map((s) => s.eventId).filter(Boolean));
+  const upcoming = await db
+    .select()
+    .from(event)
+    .where(
+      and(
+        gte(event.startsAt, new Date()),
+        sql`${event.status} = ANY(ARRAY['published','registration_open','registration_closed','in_progress']::event_status[])`,
+      ),
+    )
+    .orderBy(event.startsAt)
+    .limit(20);
+  return upcoming.filter((e) => !takenIds.has(e.id));
+}

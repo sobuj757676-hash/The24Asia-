@@ -27,6 +27,9 @@ export default async function AdminVolunteers({
             <Link href="/admin/volunteers/opportunities">Opportunities</Link>
           </Button>
           <Button asChild size="sm" variant="outline">
+            <Link href="/admin/volunteers/hours">Hours</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
             <Link href="/admin/volunteers/expenses">Expenses</Link>
           </Button>
         </div>

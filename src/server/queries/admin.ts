@@ -294,3 +294,15 @@ export async function getFinanceTotals() {
     .where(eq(donation.status, "completed"));
   return { donatedCents: donated?.total ?? 0 };
 }
+
+
+import { timeEntry } from "@/db/schema";
+
+export async function listPendingHours() {
+  return db
+    .select({ entry: timeEntry, personName: person.displayName })
+    .from(timeEntry)
+    .leftJoin(person, eq(timeEntry.personId, person.id))
+    .where(eq(timeEntry.approved, false))
+    .orderBy(desc(timeEntry.createdAt));
+}

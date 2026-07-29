@@ -21,10 +21,12 @@ export default async function VolunteerPortalLayout({
   const t = await getTranslations("portal");
   const nav = [
     { href: "/volunteer-portal", label: t("volunteerDashboard") },
+    { href: "/volunteer-portal/profile", label: "Profile" },
     { href: "/volunteer-portal/applications", label: t("myApplications") },
     { href: "/volunteer-portal/shifts", label: t("myShifts") },
     { href: "/volunteer-portal/hours", label: t("myHours") },
     { href: "/volunteer-portal/expenses", label: "Expenses" },
+    { href: "/volunteer-portal/report", label: "Report a concern" },
   ];
 
   return (
