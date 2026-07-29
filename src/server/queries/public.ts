@@ -150,3 +150,29 @@ export async function getCohortFilled(cohortId: string) {
     );
   return rows[0]?.count ?? 0;
 }
+
+
+import { product, productVariant } from "@/db/schema";
+
+export async function getPublishedProducts() {
+  return db
+    .select()
+    .from(product)
+    .where(eq(product.published, true))
+    .orderBy(desc(product.createdAt));
+}
+
+export async function getProductBySlug(slug: string) {
+  const rows = await db
+    .select()
+    .from(product)
+    .where(and(eq(product.slug, slug), eq(product.published, true)))
+    .limit(1);
+  const p = rows[0];
+  if (!p) return null;
+  const variants = await db
+    .select()
+    .from(productVariant)
+    .where(eq(productVariant.productId, p.id));
+  return { product: p, variants };
+}

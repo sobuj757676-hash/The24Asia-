@@ -274,3 +274,23 @@ export async function listUsersWithRoles() {
     roles: roles.filter((r) => r.personId === u.personId),
   }));
 }
+
+
+import { donation, shopOrder, campaign } from "@/db/schema";
+
+export async function listDonations() {
+  return db.select().from(donation).orderBy(desc(donation.createdAt)).limit(200);
+}
+export async function listOrders() {
+  return db.select().from(shopOrder).orderBy(desc(shopOrder.createdAt)).limit(200);
+}
+export async function listCampaignsAll() {
+  return db.select().from(campaign).orderBy(desc(campaign.createdAt));
+}
+export async function getFinanceTotals() {
+  const [donated] = await db
+    .select({ total: sql<number>`coalesce(sum(${donation.amountCents}),0)::int` })
+    .from(donation)
+    .where(eq(donation.status, "completed"));
+  return { donatedCents: donated?.total ?? 0 };
+}
