@@ -7,7 +7,16 @@ import { z } from "zod";
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  // Sanitize: pasted env values sometimes contain trailing newlines or an
+  // accidental duplicate copy. Extract the first valid postgres URL token so a
+  // malformed paste can't produce an "invalid header value" at the driver.
+  DATABASE_URL: z
+    .string()
+    .min(1, "DATABASE_URL is required")
+    .transform((v) => {
+      const match = v.match(/postgres(?:ql)?:\/\/\S+/);
+      return (match ? match[0] : v).trim();
+    }),
 
   BETTER_AUTH_SECRET: z.string().min(16, "BETTER_AUTH_SECRET must be >= 16 chars"),
   BETTER_AUTH_URL: z.string().url().default("http://localhost:3000"),
