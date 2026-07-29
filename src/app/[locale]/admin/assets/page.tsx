@@ -1,7 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { requirePermission } from "@/lib/auth/session";
 import { Card, CardBody } from "@/components/ui/card";
-import { Field, Input, Select } from "@/components/ui/input";
+import { Field, Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge, EmptyState } from "@/components/ui/misc";
 import { listAssets, listVariantsForStock } from "@/server/queries/ops";

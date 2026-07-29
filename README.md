@@ -8,12 +8,13 @@ website, authenticated member/volunteer portals, and a staff/admin operating
 system — built on a single design system, identity/consent layer and structured
 data model.
 
-> **Scope note.** The PRD defines a phased, gated programme (Phases 0–4). It is
-> explicit that "everything at once" is the top delivery risk. This codebase
-> delivers the launch-critical (P0) foundation. High-risk capabilities
-> (donation payments, recurring giving, merch checkout, public counselling
-> intake, community) are **built but feature-flagged OFF** until their
-> governance decision in PRD §30.2 is approved. See [Feature gates](#feature-gates).
+> **Scope.** This repository implements the **full platform across all PRD
+> phases** — public site, learner/volunteer/partner portals, and a complete
+> staff/admin operating system. The company configures everything through the
+> admin panel (courses, events, opportunities, services, campaigns, products,
+> content, users/roles, etc.). Sensitive/high-risk capabilities remain
+> **admin-toggleable feature flags** (see [Feature flags](#feature-flags)) so
+> the organisation controls when each goes live.
 
 ---
 
@@ -83,19 +84,46 @@ Roles: `admin`, `coordinator`, `finance`, `publisher`, `content_author`,
 
 ## Surfaces
 
-- **Public website** (`/`) — home with live impact metrics, training catalogue &
-  schedule, events, volunteer opportunities, get support + urgent help, impact,
-  live shows, about/team/partners/contact, certificate verification, donate.
-- **Member/personal hub** (`/account`) — my courses, certificates, events,
-  granular communication preferences & consent.
+- **Public website** (`/`) — home with live impact metrics, training catalogue,
+  schedule & learning pathways, events, volunteer opportunities, get support +
+  urgent help + private contact request, careers, community, live shows,
+  impact, about/team/partners/contact, certificate verification, donate, shop,
+  newsletter.
+- **Member/personal hub** (`/account`) — courses, materials, assessments (take
+  quizzes), certificates, events, career goals & mentorship, support requests,
+  notifications (in-app + push), communication preferences & consent.
 - **Volunteer hub** (`/volunteer-portal`) — dashboard, applications, shifts,
-  hours logging (goes to approval).
-- **Admin** (`/admin`) — dashboard KPIs, program/application review (approve →
-  auto-enrol), volunteer review, events, scoped people CRM, audit log, feature
-  flags.
+  hours logging, expense claims.
+- **Partner portal** (`/partner-portal`) — linked partner contacts submit
+  opportunity listings for review and manage their listings.
+- **Admin operating system** (`/admin`) — dashboards + full configuration CRUD:
+  programs (courses, cohorts, applications→auto-enrol, assessments,
+  certificates, materials, pathways), events, volunteers (opportunities,
+  reviews, expenses), content (pages, metrics, services, partners, episodes),
+  shop + inventory, finance (donations, orders, refunds), support case queue,
+  career/mentorship, community moderation, communications (campaigns, push),
+  governance (risks, incidents, policies, meetings), assets, people CRM, users &
+  roles, audit log, feature flags.
 
-Routes under `/admin`, `/account`, `/volunteer-portal` are gated by
-`src/middleware.ts` (session) and per-page permission checks.
+Routes under `/admin`, `/account`, `/volunteer-portal`, `/partner-portal` are
+gated by `src/middleware.ts` (session) and per-page RBAC/ABAC permission checks.
+
+## Capabilities by PRD phase
+
+| Area | Status |
+|---|---|
+| Public site + PWA + i18n (en/bn/ta) | ✅ |
+| Identity, RBAC+ABAC, consent, audit | ✅ |
+| Programs: courses→cohorts→sessions→applications→enrolment→attendance | ✅ |
+| Assessments, certificates (verifiable), materials, learning pathways | ✅ |
+| Events, registrations, blood drives, live shows | ✅ |
+| Volunteering: opportunities, applications, shifts, hours, expenses, recognition | ✅ |
+| Payments: donations + shop checkout (Stripe-ready + test mode), refunds | ✅ |
+| Support intake + referrals, career listings, mentorship | ✅ |
+| Community + moderation (groups, posts, reports, queue) | ✅ |
+| Notifications (in-app), web push, newsletters/campaigns | ✅ |
+| Partner portal, inventory/assets, governance (risks/incidents/policies/meetings) | ✅ |
+| Full admin configuration CRUD for every entity | ✅ |
 
 ---
 
@@ -114,19 +142,32 @@ of general CRM/search views.
 
 ---
 
-## Feature gates
+## Feature flags
 
-High-risk capabilities are seeded **disabled** and flipped only after the PRD
-§30.2 governance decision. Manage them at `/admin/flags` (audited).
+Capabilities are **admin-toggleable** at `/admin/flags` (every change is
+audited), so the organisation decides when each goes live. Seeded **on** by
+default for a ready-to-run platform:
 
-| Flag | Gated on |
+| Flag | Controls |
 |---|---|
-| `donations.payment` | Charity/IPC + tax status + payment vendor |
-| `donations.recurring` | Donor self-service controls (FUND-006) |
-| `merch.payment` | Tax / fulfilment / refund review |
-| `support.public_intake` | Named trained staffed coverage + SLAs |
-| `community.enabled` | Moderators + safeguarding (Phase 3) |
-| `notifications.push` | VAPID keys + consent tooling |
+| `donations.payment` | Online donation checkout |
+| `donations.recurring` | Recurring donation plans |
+| `merch.payment` | Shop checkout payment |
+| `support.public_intake` | Public private-contact/support request form |
+| `community.enabled` | Community groups & posting |
+| `notifications.push` | Web push notifications |
+
+## Payments
+
+Runs in **test mode** out of the box (the full donation/shop flow works without
+a processor). Set `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` to route through
+Stripe Checkout; completion is confirmed by the signed webhook at
+`/api/payments/webhook`. Card data never touches the platform.
+
+## Push notifications
+
+Web push uses VAPID keys (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY`). Generate with `npx web-push generate-vapid-keys`.
 
 ---
 
@@ -145,9 +186,9 @@ High-risk capabilities are seeded **disabled** and flipped only after the PRD
 
 ---
 
-## What is intentionally NOT here (per PRD phasing)
+## Future enhancements
 
-Assessments/quizzes, full mentorship & referral closed-loop, community, payment
-processing, SMS/WhatsApp/push delivery, partner portal, and content migration
-from WordPress are later phases and/or require governance sign-off. The schema
-and feature flags anticipate them.
+The platform is functionally complete across the PRD phases. Natural next steps
+for a production rollout: WordPress content migration, SMS/WhatsApp delivery
+providers, object-storage media uploads (S3/R2 wiring is stubbed via env),
+skills passport / verifiable credentials, and Open Referral data exchange.

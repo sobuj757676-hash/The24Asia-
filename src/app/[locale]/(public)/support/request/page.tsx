@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { Container, Section } from "@/components/ui/misc";
 import { Field, Input, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ export default async function SupportRequestPage({
         <p className="mt-2 text-sm text-[var(--muted)]">
           A trained member of our team will reach out. Share only what you are
           comfortable with. If you are in immediate danger, please use the{" "}
-          <a href="/support/urgent-help" className="text-brand-700 underline">urgent help</a>{" "}
+          <Link href="/support/urgent-help" className="text-brand-700 underline">urgent help</Link>{" "}
           contacts instead.
         </p>
         <form action={createSupportRequest} className="mt-6 space-y-4">

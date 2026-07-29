@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
 import { savePushSubscription } from "@/server/actions/comms";
+
+const noopSubscribe = () => () => {};
 
 function urlBase64ToUint8Array(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -14,18 +16,13 @@ function urlBase64ToUint8Array(base64: string) {
 }
 
 export function PushToggle() {
-  const [supported, setSupported] = useState(false);
-  const [busy, setBusy] = useState(false);
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-
-  useEffect(() => {
-    setSupported(
-      typeof window !== "undefined" &&
-        "serviceWorker" in navigator &&
-        "PushManager" in window &&
-        !!vapid,
-    );
-  }, [vapid]);
+  const [busy, setBusy] = useState(false);
+  const supported = useSyncExternalStore(
+    noopSubscribe,
+    () => "serviceWorker" in navigator && "PushManager" in window && !!vapid,
+    () => false,
+  );
 
   if (!supported) {
     return (

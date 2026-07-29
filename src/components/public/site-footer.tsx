@@ -12,6 +12,7 @@ export function SiteFooter() {
       links: [
         { label: t("courses"), href: "/learn" },
         { label: t("trainingCalendar"), href: "/learn/schedule" },
+        { label: "Pathways", href: "/learn/pathways" },
         { label: t("verifyCertificate"), href: "/verify" },
       ],
     },
@@ -20,12 +21,15 @@ export function SiteFooter() {
       links: [
         { label: t("upcomingEvents"), href: "/events" },
         { label: t("liveShows"), href: "/live-shows" },
+        { label: "Community", href: "/community" },
       ],
     },
     {
       heading: t("support"),
       links: [
         { label: t("wellbeing"), href: "/support" },
+        { label: "Careers", href: "/careers" },
+        { label: "Shop", href: "/shop" },
         { label: t("urgentHelp"), href: "/support/urgent-help" },
       ],
     },

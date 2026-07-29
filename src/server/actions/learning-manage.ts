@@ -133,7 +133,7 @@ export async function savePathway(fd: FormData) {
 }
 
 export async function addPathStep(fd: FormData) {
-  const staff = await requirePermission("course:manage");
+  await requirePermission("course:manage");
   const pathId = s(fd, "pathId");
   const courseId = s(fd, "courseId");
   if (!pathId || !courseId) return;

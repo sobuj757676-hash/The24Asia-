@@ -138,7 +138,6 @@ export async function sendCampaign(campaignId: string) {
     .where(eq(newsletterCampaign.id, campaignId));
 
   if (!isProd) {
-    // eslint-disable-next-line no-console
     console.info(`[campaign] "${c.subject}" delivered to ${audience.length} recipients`);
   }
 
