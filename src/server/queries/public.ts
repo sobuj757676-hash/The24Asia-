@@ -20,7 +20,8 @@ export async function getPublishedImpactMetrics() {
     .select()
     .from(impactMetric)
     .where(eq(impactMetric.publishedPublicly, true))
-    .orderBy(asc(impactMetric.displayOrder));
+    .orderBy(asc(impactMetric.displayOrder))
+    .limit(LIST_LIMIT);
 }
 
 export async function getPublishedCourses() {
@@ -28,7 +29,8 @@ export async function getPublishedCourses() {
     .select()
     .from(course)
     .where(eq(course.published, true))
-    .orderBy(asc(course.displayOrder));
+    .orderBy(asc(course.displayOrder))
+    .limit(LIST_LIMIT);
 }
 
 export async function getCourseBySlug(slug: string) {
@@ -55,9 +57,16 @@ export async function getOpenCohorts(courseId?: string) {
         sql`${cohort.status} = ANY(ARRAY['published','registration_open','waitlist_only']::cohort_status[])`,
       ),
     )
-    .orderBy(asc(cohort.startDate));
+    .orderBy(asc(cohort.startDate))
+    .limit(LIST_LIMIT);
   return rows;
 }
+
+/**
+ * Event statuses that may be shown to the public. Draft, cancelled and
+ * postponed events must never leak through a listing, a slug lookup or search.
+ */
+const PUBLIC_EVENT_STATUSES = sql`${event.status} = ANY(ARRAY['published','registration_open','registration_closed','in_progress','completed']::event_status[])`;
 
 export async function getUpcomingEvents(limit = 12) {
   return db
@@ -74,7 +83,11 @@ export async function getUpcomingEvents(limit = 12) {
 }
 
 export async function getEventBySlug(slug: string) {
-  const rows = await db.select().from(event).where(eq(event.slug, slug)).limit(1);
+  const rows = await db
+    .select()
+    .from(event)
+    .where(and(eq(event.slug, slug), PUBLIC_EVENT_STATUSES))
+    .limit(1);
   return rows[0] ?? null;
 }
 
@@ -83,7 +96,8 @@ export async function getPublishedOpportunities() {
     .select()
     .from(opportunity)
     .where(eq(opportunity.published, true))
-    .orderBy(desc(opportunity.createdAt));
+    .orderBy(desc(opportunity.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getPublishedServices() {
@@ -91,7 +105,8 @@ export async function getPublishedServices() {
     .select()
     .from(service)
     .where(eq(service.published, true))
-    .orderBy(desc(service.isUrgentHelp));
+    .orderBy(desc(service.isUrgentHelp))
+    .limit(LIST_LIMIT);
 }
 
 export async function getUrgentHelpServices() {
@@ -115,17 +130,19 @@ export async function getPublicPartners() {
     .select()
     .from(partner)
     .where(eq(partner.displayPublicly, true))
-    .orderBy(asc(partner.displayOrder));
+    .orderBy(asc(partner.displayOrder))
+    .limit(LIST_LIMIT);
 }
 
 export async function getAwards() {
-  return db.select().from(award).orderBy(asc(award.displayOrder));
+  return db.select().from(award).orderBy(asc(award.displayOrder)).limit(LIST_LIMIT);
 }
 
 /** Certificate verification (PRD LMS-011): exposes only approved fields. */
 export async function verifyCertificate(code: string) {
   const rows = await db
     .select({
+      verificationCode: certificate.verificationCode,
       courseTitle: certificate.courseTitle,
       recipientName: certificate.recipientName,
       issuedAt: certificate.issuedAt,
@@ -159,7 +176,8 @@ export async function getPublishedProducts() {
     .select()
     .from(product)
     .where(eq(product.published, true))
-    .orderBy(desc(product.createdAt));
+    .orderBy(desc(product.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getProductBySlug(slug: string) {
@@ -181,6 +199,9 @@ export async function getProductBySlug(slug: string) {
 import { ilike, or } from "drizzle-orm";
 import { contentItem, contentTranslation, policy } from "@/db/schema";
 
+/** Safety cap so no list query can return an unbounded result set. */
+const LIST_LIMIT = 500;
+
 /** Global search across public content (PRD WEB-004/005). */
 export async function searchPublic(q: string) {
   const term = `%${q}%`;
@@ -193,7 +214,12 @@ export async function searchPublic(q: string) {
     db
       .select({ slug: event.slug, title: event.title })
       .from(event)
-      .where(or(ilike(event.title, term), ilike(event.description, term)))
+      .where(
+        and(
+          PUBLIC_EVENT_STATUSES,
+          or(ilike(event.title, term), ilike(event.description, term)),
+        ),
+      )
       .limit(8),
     db
       .select({ slug: opportunity.slug, title: opportunity.title })
@@ -248,4 +274,19 @@ export async function getPolicyBySlug(slug: string) {
     .where(and(eq(policy.slug, slug), eq(policy.published, true)))
     .limit(1);
   return rows[0] ?? null;
+}
+
+
+/**
+ * Filled seats for many cohorts in ONE query (previously one query per cohort).
+ */
+export async function getCohortFilledMap(): Promise<Map<string, number>> {
+  const rows = await db
+    .select({ cohortId: enrollment.cohortId, n: sql<number>`count(*)::int` })
+    .from(enrollment)
+    .where(
+      sql`${enrollment.status} = ANY(ARRAY['offered','enrolled','completed']::enrollment_status[])`,
+    )
+    .groupBy(enrollment.cohortId);
+  return new Map(rows.map((r) => [r.cohortId, r.n]));
 }

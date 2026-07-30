@@ -24,13 +24,13 @@ export default async function CertificatePage({
   return (
     <main className="mx-auto flex min-h-dvh max-w-3xl flex-col items-center justify-center p-6">
       <div className="w-full rounded-3xl border-4 border-brand-600 bg-white p-10 text-center text-ink-900 shadow-xl">
-        <div className="text-sm font-semibold uppercase tracking-widest text-brand-700">
+        <div className="text-sm font-semibold uppercase tracking-widest text-brand-700 dark:text-brand-300">
           24Asia · Certificate of Completion
         </div>
         <p className="mt-8 text-sm text-ink-500">This certifies that</p>
         <h1 className="mt-2 text-4xl font-extrabold">{cert.recipientName}</h1>
         <p className="mt-4 text-sm text-ink-500">has successfully completed</p>
-        <h2 className="mt-2 text-2xl font-bold text-brand-700">{cert.courseTitle}</h2>
+        <h2 className="mt-2 text-2xl font-bold text-brand-700 dark:text-brand-300">{cert.courseTitle}</h2>
         <p className="mt-6 text-sm text-ink-500">
           Issued {formatDate(cert.issuedAt, locale, { dateStyle: "long" })}
         </p>

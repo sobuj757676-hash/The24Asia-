@@ -8,7 +8,7 @@ export const Input = React.forwardRef<
   <input
     ref={ref}
     className={cn(
-      "flex h-11 w-full rounded-xl border border-ink-300 bg-[var(--card)] px-3 text-base outline-none placeholder:text-ink-400 focus-visible:border-brand-600 disabled:opacity-50",
+      "flex h-11 w-full rounded-xl border border-ink-300 bg-[var(--card)] px-3 text-base placeholder:text-ink-400 focus-visible:border-brand-600 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     {...props}
@@ -23,7 +23,7 @@ export const Textarea = React.forwardRef<
   <textarea
     ref={ref}
     className={cn(
-      "flex min-h-24 w-full rounded-xl border border-ink-300 bg-[var(--card)] px-3 py-2 text-base outline-none placeholder:text-ink-400 focus-visible:border-brand-600 disabled:opacity-50",
+      "flex min-h-24 w-full rounded-xl border border-ink-300 bg-[var(--card)] px-3 py-2 text-base placeholder:text-ink-400 focus-visible:border-brand-600 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     {...props}
@@ -38,7 +38,7 @@ export const Select = React.forwardRef<
   <select
     ref={ref}
     className={cn(
-      "flex h-11 w-full rounded-xl border border-ink-300 bg-[var(--card)] px-3 text-base outline-none focus-visible:border-brand-600 disabled:opacity-50",
+      "flex h-11 w-full rounded-xl border border-ink-300 bg-[var(--card)] px-3 text-base focus-visible:border-brand-600 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     {...props}
@@ -70,7 +70,7 @@ export function Field({
     <div className="space-y-1.5">
       <label htmlFor={htmlFor} className="block text-sm font-medium">
         {label}
-        {required ? <span className="text-danger"> *</span> : null}
+        {required ? <span className="text-danger-fg"> *</span> : null}
       </label>
       {hint ? (
         <p id={hintId} className="text-xs text-[var(--muted)]">
@@ -79,7 +79,7 @@ export function Field({
       ) : null}
       {children}
       {error ? (
-        <p id={errId} role="alert" className="text-xs text-danger">
+        <p id={errId} role="alert" className="text-xs text-danger-fg">
           {error}
         </p>
       ) : null}

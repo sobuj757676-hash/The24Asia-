@@ -1,12 +1,18 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requirePermission } from "@/lib/auth/session";
-import { Card, CardBody } from "@/components/ui/card";
-import { Badge, EmptyState } from "@/components/ui/misc";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard, StatGrid } from "@/components/ui/stat-card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { DataList, type Column } from "@/components/ui/data-list";
+import { Receipt, Clock, CircleDollarSign } from "lucide-react";
 import { ActionButton } from "@/components/admin/row-actions";
 import { listAllExpenses } from "@/server/queries/ops";
 import { decideExpense } from "@/server/actions/ops";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatMoney } from "@/lib/utils";
+
+type Row = Awaited<ReturnType<typeof listAllExpenses>>[number];
 
 export default async function AdminExpenses({
   params,
@@ -18,46 +24,139 @@ export default async function AdminExpenses({
   await requirePermission("volunteer:hours_approve");
   const expenses = await listAllExpenses();
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold">Expense claims</h1>
-        <Link href="/admin/volunteers" className="text-sm text-brand-700">← Volunteers</Link>
-      </div>
-      {expenses.length === 0 ? (
-        <EmptyState title="No expense claims" />
-      ) : (
-        <div className="space-y-2">
-          {expenses.map(({ claim, personName }) => (
-            <Card key={claim.id}>
-              <CardBody className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold">
-                    S${(claim.amountCents / 100).toFixed(2)} · {personName ?? "Volunteer"}
-                  </p>
-                  <p className="text-sm text-[var(--muted)]">
-                    {claim.category} · {claim.description} · {formatDate(claim.createdAt, locale)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge tone={claim.status === "approved" || claim.status === "paid" ? "success" : claim.status === "rejected" ? "danger" : "neutral"}>
-                    {claim.status}
-                  </Badge>
-                  {claim.status === "submitted" && (
-                    <>
-                      <ActionButton action={decideExpense.bind(null, claim.id, "approved")} label="Approve" successMessage="Approved" />
-                      <ActionButton action={decideExpense.bind(null, claim.id, "rejected")} label="Reject" variant="danger" successMessage="Rejected" />
-                    </>
-                  )}
-                  {claim.status === "approved" && (
-                    <ActionButton action={decideExpense.bind(null, claim.id, "paid")} label="Mark paid" variant="outline" successMessage="Marked paid" />
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-          ))}
+  const submitted = expenses.filter((e) => e.claim.status === "submitted");
+  const approved = expenses.filter((e) => e.claim.status === "approved");
+  const sum = (rows: Row[]) => rows.reduce((t, { claim }) => t + claim.amountCents, 0);
+
+  const columns: Column<Row>[] = [
+    {
+      key: "person",
+      label: "Volunteer",
+      primary: true,
+      render: ({ claim, personName }) => (
+        <div className="min-w-0">
+          <span className="font-medium">{personName ?? "Volunteer"}</span>
+          <span className="block text-xs text-[var(--muted)]">
+            {formatDate(claim.createdAt, locale)}
+          </span>
         </div>
-      )}
-    </div>
+      ),
+    },
+    {
+      key: "amount",
+      label: "Amount",
+      render: ({ claim }) => (
+        <span className="font-semibold tabular-nums">
+          {formatMoney(claim.amountCents, claim.currency, locale)}
+        </span>
+      ),
+    },
+    {
+      key: "category",
+      label: "Category",
+      render: ({ claim }) => <span className="capitalize">{claim.category ?? "—"}</span>,
+    },
+    {
+      key: "description",
+      label: "Description",
+      hideOnMobile: true,
+      render: ({ claim }) => (
+        <span className="text-[var(--muted)]">{claim.description || "—"}</span>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: ({ claim }) => <StatusBadge status={claim.status} />,
+    },
+    {
+      key: "actions",
+      label: "Decision",
+      align: "right",
+      render: ({ claim }) => (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {claim.status === "submitted" && (
+            <>
+              <ActionButton
+                action={decideExpense.bind(null, claim.id, "approved")}
+                label="Approve"
+                successMessage="Approved"
+              />
+              <ActionButton
+                action={decideExpense.bind(null, claim.id, "rejected")}
+                label="Reject"
+                variant="danger"
+                confirm="Reject this claim? The volunteer will see it was not approved."
+                successMessage="Rejected"
+              />
+            </>
+          )}
+          {claim.status === "approved" && (
+            <ActionButton
+              action={decideExpense.bind(null, claim.id, "paid")}
+              label="Mark paid"
+              variant="outline"
+              confirm="Confirm this claim has been reimbursed?"
+              successMessage="Marked paid"
+            />
+          )}
+          {(claim.status === "paid" || claim.status === "rejected") && (
+            <span className="text-xs text-[var(--muted)]">No action needed</span>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <PageHeader
+        title="Expense claims"
+        description="Reimburse volunteers promptly — nobody should be out of pocket for giving their time."
+        breadcrumb={
+          <Link href="/admin/volunteers" className="hover:underline">
+            ← Volunteers
+          </Link>
+        }
+      />
+
+      <StatGrid cols={3}>
+        <StatCard
+          label="Awaiting review"
+          value={formatMoney(sum(submitted), "SGD", locale)}
+          hint={`${submitted.length} claim${submitted.length === 1 ? "" : "s"}`}
+          icon={<Clock className="size-4" />}
+        />
+        <StatCard
+          label="Approved, not yet paid"
+          value={formatMoney(sum(approved), "SGD", locale)}
+          hint={`${approved.length} to reimburse`}
+          icon={<CircleDollarSign className="size-4" />}
+        />
+        <StatCard
+          label="Total claims"
+          value={expenses.length}
+          icon={<Receipt className="size-4" />}
+          tone="neutral"
+        />
+      </StatGrid>
+
+      <div className="mt-6">
+        {expenses.length === 0 ? (
+          <EmptyState
+            icon={<Receipt className="size-5" aria-hidden />}
+            title="No expense claims"
+            description="Claims submitted by volunteers from their portal will appear here for approval."
+          />
+        ) : (
+          <DataList
+            columns={columns}
+            rows={expenses}
+            getKey={({ claim }) => claim.id}
+            caption="Volunteer expense claims"
+          />
+        )}
+      </div>
+    </>
   );
 }

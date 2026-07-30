@@ -1,7 +1,10 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { Container, Section, EmptyState } from "@/components/ui/misc";
-import { Card, CardBody } from "@/components/ui/card";
+import { Container, Section } from "@/components/ui/misc";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageIntro } from "@/components/ui/page-intro";
+import { Button } from "@/components/ui/button";
+import { ChevronRight, ScrollText } from "lucide-react";
 import { listPublishedPolicies } from "@/server/queries/public";
 
 export const metadata = { title: "Policies" };
@@ -18,23 +21,40 @@ export default async function PoliciesPage({
   return (
     <Section>
       <Container className="max-w-2xl">
-        <h1 className="text-3xl font-extrabold">Policies</h1>
-        <p className="mt-2 text-[var(--muted)]">Our governance and safeguarding policies.</p>
+        <PageIntro
+          title="Policies"
+          description="How we govern ourselves: safeguarding, privacy, data protection and complaints. Published in full, because trust has to be earned."
+          className="mb-6"
+        />
+
         {policies.length === 0 ? (
-          <div className="mt-8"><EmptyState title="No policies published yet" /></div>
+          <EmptyState
+            icon={<ScrollText className="size-5" aria-hidden />}
+            title="No policies published yet"
+            description="Our policy documents are being finalised for publication. If you need a specific policy now, ask us and we'll send it to you."
+            action={
+              <Button asChild size="sm" variant="outline">
+                <Link href="/about/contact">Request a policy</Link>
+              </Button>
+            }
+          />
         ) : (
-          <div className="mt-6 space-y-2">
+          <ul className="divide-y overflow-hidden rounded-2xl border bg-[var(--card)]">
             {policies.map((p) => (
-              <Link key={p.id} href={`/policies/${p.slug}`}>
-                <Card className="transition-colors hover:border-brand-400">
-                  <CardBody className="flex items-center justify-between">
-                    <span className="font-medium">{p.title}</span>
-                    <span className="text-xs text-[var(--muted)]">v{p.version}</span>
-                  </CardBody>
-                </Card>
-              </Link>
+              <li key={p.id}>
+                <Link
+                  href={`/policies/${p.slug}`}
+                  className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-ink-100 dark:hover:bg-ink-800"
+                >
+                  <span className="min-w-0 font-medium">{p.title}</span>
+                  <span className="flex shrink-0 items-center gap-2 text-xs text-[var(--muted)]">
+                    Version {p.version}
+                    <ChevronRight className="size-4" aria-hidden />
+                  </span>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </Container>
     </Section>

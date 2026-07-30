@@ -20,7 +20,12 @@ import { audit } from "@/lib/audit";
  */
 export async function GET() {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  if (!user) {
+    return NextResponse.json(
+      { error: "unauthenticated" },
+      { status: 401, headers: { "Cache-Control": "no-store" } },
+    );
+  }
   const pid = user.personId;
 
   const [profile, consents, prefs, enrollments, applications, events, certs, hours] =
@@ -59,6 +64,11 @@ export async function GET() {
     headers: {
       "Content-Type": "application/json",
       "Content-Disposition": `attachment; filename="24asia-my-data.json"`,
+      // This response is a full copy of one person's record: never let a proxy,
+      // CDN or the browser cache retain it.
+      "Cache-Control": "no-store, max-age=0, must-revalidate",
+      Pragma: "no-cache",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }

@@ -26,3 +26,39 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
+
+
+/**
+ * Locale-aware currency formatting from minor units (cents).
+ * `compact` drops the decimals for dashboard tiles where precision isn't useful.
+ */
+export function formatMoney(
+  amountCents: number,
+  currency = "SGD",
+  locale = "en",
+  compact = false,
+): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-SG" : locale, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: compact ? 0 : 2,
+    maximumFractionDigits: compact ? 0 : 2,
+  }).format(amountCents / 100);
+}
+
+/** Compact number formatting for large counts (1.2K, 3.4M). */
+export function formatCount(value: number, locale = "en"): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-SG" : locale, {
+    notation: value >= 10000 ? "compact" : "standard",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+/**
+ * True when the given instant is in the past. Lives here rather than inline in
+ * a component because `Date.now()` inside a render body trips React's purity
+ * rule (and would be a genuine hazard in a client component).
+ */
+export function isPast(value: Date | string | number) {
+  return new Date(value).getTime() < Date.now();
+}

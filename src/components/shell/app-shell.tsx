@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { authClient } from "@/lib/auth/client";
 import { useRouter } from "@/i18n/navigation";
@@ -11,7 +11,7 @@ import {
   MessagesSquare, Megaphone, ShieldCheck, Boxes, UserCog, ScrollText,
   Flag, BookOpen, ClipboardCheck, Award, Bell, UserRound, SlidersHorizontal,
   Lock, ClipboardList, Clock, Receipt, TriangleAlert, Menu, X, LogOut,
-  ChevronDown, FolderKanban,
+  ChevronDown, FolderKanban, Loader2,
 } from "lucide-react";
 
 type PanelId = "admin" | "account" | "volunteer" | "partner";
@@ -108,20 +108,57 @@ export function AppShell({
   title,
   user,
   panels,
+  allowedHrefs,
   children,
 }: {
   panel: PanelId;
   title: string;
   user: { name: string; email: string };
   panels: { href: string; label: string }[];
+  /** When provided, only these nav destinations are shown (server-computed
+   *  from the user's permissions) so nobody sees a link they cannot open. */
+  allowedHrefs?: string[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const drawerCloseRef = useRef<HTMLButtonElement>(null);
+
+  // The mobile drawer is a modal surface: lock background scroll, close on
+  // Escape and move focus into it so keyboard and screen-reader users are not
+  // left behind the overlay.
+  useEffect(() => {
+    if (!drawer) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDrawer(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    drawerCloseRef.current?.focus();
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [drawer]);
+
+  // Escape also dismisses the panel switcher menu.
+  useEffect(() => {
+    if (!menu) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenu(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menu]);
   const accent = ACCENT[panel];
-  const groups = NAV[panel];
+  const allow = allowedHrefs ? new Set(allowedHrefs) : null;
+  const groups = NAV[panel]
+    .map((g) => ({ ...g, items: allow ? g.items.filter((i) => allow.has(i.href)) : g.items }))
+    .filter((g) => g.items.length > 0);
 
   const isActive = (href: string) =>
     href === `/${panel === "account" ? "account" : panel === "volunteer" ? "volunteer-portal" : panel === "partner" ? "partner-portal" : "admin"}`
@@ -169,7 +206,10 @@ export function AppShell({
                           : "text-ink-700 hover:bg-ink-100 dark:text-ink-200 dark:hover:bg-ink-800",
                       )}
                     >
-                      <Icon className={cn("size-4 shrink-0", active ? accent.icon : "text-ink-400")} />
+                      <Icon
+                        className={cn("size-4 shrink-0", active ? accent.icon : "text-ink-400")}
+                        aria-hidden
+                      />
                       {it.label}
                     </Link>
                   </li>
@@ -189,6 +229,9 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh bg-[var(--background)]">
+      <a href="#main" className="skip-link">
+        Skip to main content
+      </a>
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-[var(--card)] lg:block">
         {SidebarContent}
@@ -198,14 +241,21 @@ export function AppShell({
       {drawer && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setDrawer(false)} aria-hidden />
-          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-[var(--card)] shadow-xl">
+          <aside
+            id="panel-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${title} navigation`}
+            className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-[var(--card)] shadow-xl"
+          >
             <button
+              ref={drawerCloseRef}
               type="button"
               aria-label="Close menu"
               onClick={() => setDrawer(false)}
               className="absolute right-3 top-4 grid size-9 place-items-center rounded-lg hover:bg-ink-100 dark:hover:bg-ink-800"
             >
-              <X className="size-5" />
+              <X className="size-5" aria-hidden />
             </button>
             {SidebarContent}
           </aside>
@@ -218,33 +268,51 @@ export function AppShell({
           <button
             type="button"
             aria-label="Open menu"
+            aria-expanded={drawer}
+            aria-controls="panel-drawer"
             onClick={() => setDrawer(true)}
             className="grid size-10 place-items-center rounded-xl hover:bg-ink-100 lg:hidden dark:hover:bg-ink-800"
           >
-            <Menu className="size-5" />
+            <Menu className="size-5" aria-hidden />
           </button>
-          <h1 className="truncate text-base font-bold sm:text-lg">{title}</h1>
+          {/*
+            Panel label only — the page's own <h1> comes from <PageHeader>, so
+            this must not be a heading or every screen would ship two h1s.
+          */}
+          <p className="truncate text-base font-bold sm:text-lg">{title}</p>
           <div className="ml-auto flex items-center gap-2">
             {/* Panel switcher */}
             {panels.length > 1 && (
               <div className="relative">
                 <button
                   type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={menu}
+                  aria-controls="panel-switcher"
                   onClick={() => setMenu((v) => !v)}
-                  className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium hover:bg-ink-100 dark:hover:bg-ink-800"
+                  className="flex min-h-11 items-center gap-1.5 rounded-xl border px-3 text-sm font-medium hover:bg-ink-100 dark:hover:bg-ink-800"
                 >
-                  Switch <ChevronDown className="size-4" />
+                  Switch panel
+                  <ChevronDown
+                    className={cn("size-4 transition-transform", menu && "rotate-180")}
+                    aria-hidden
+                  />
                 </button>
                 {menu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setMenu(false)} aria-hidden />
-                    <div className="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-xl border bg-[var(--card)] py-1 shadow-lg">
+                    <div
+                      id="panel-switcher"
+                      role="menu"
+                      className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-xl border bg-[var(--card)] py-1 shadow-lg"
+                    >
                       {panels.map((p) => (
                         <Link
                           key={p.href}
+                          role="menuitem"
                           href={p.href}
                           onClick={() => setMenu(false)}
-                          className="block px-4 py-2 text-sm hover:bg-ink-100 dark:hover:bg-ink-800"
+                          className="flex min-h-11 items-center px-4 text-sm hover:bg-ink-100 dark:hover:bg-ink-800"
                         >
                           {p.label}
                         </Link>
@@ -260,31 +328,48 @@ export function AppShell({
                 className={cn("grid size-9 place-items-center rounded-full text-sm font-bold text-white", accent.badge)}
                 title={user.email}
               >
-                {initials}
+                <span aria-hidden>{initials}</span>
+                <span className="sr-only">Signed in as {user.name || user.email}</span>
               </span>
               <button
                 type="button"
-                aria-label="Sign out"
+                aria-label={signingOut ? "Signing out" : "Sign out"}
+                aria-busy={signingOut}
+                disabled={signingOut}
                 onClick={async () => {
+                  // Clearing caches then signing out can take a second on a
+                  // slow connection — show progress so nobody clicks twice.
+                  setSigningOut(true);
                   if (typeof caches !== "undefined") {
                     try {
                       const keys = await caches.keys();
                       await Promise.all(keys.map((k) => caches.delete(k)));
                     } catch { /* ignore */ }
                   }
-                  await authClient.signOut();
-                  router.push("/");
-                  router.refresh();
+                  try {
+                    await authClient.signOut();
+                  } finally {
+                    router.push("/");
+                    router.refresh();
+                  }
                 }}
-                className="grid size-10 place-items-center rounded-xl hover:bg-ink-100 dark:hover:bg-ink-800"
+                className="grid size-10 place-items-center rounded-xl hover:bg-ink-100 disabled:opacity-60 dark:hover:bg-ink-800"
               >
-                <LogOut className="size-5" />
+                {signingOut ? (
+                  <Loader2 className="size-5 animate-spin" aria-hidden />
+                ) : (
+                  <LogOut className="size-5" aria-hidden />
+                )}
               </button>
             </div>
           </div>
         </header>
 
-        <main id="main" className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto max-w-7xl px-4 py-6 focus:outline-none sm:px-6 lg:py-8"
+        >
           {children}
         </main>
       </div>

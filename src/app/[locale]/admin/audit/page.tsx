@@ -1,8 +1,15 @@
 import { setRequestLocale } from "next-intl/server";
 import { requirePermission } from "@/lib/auth/session";
-import { EmptyState } from "@/components/ui/misc";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { DataList, type Column } from "@/components/ui/data-list";
+import { TruncationNotice } from "@/components/ui/truncation-notice";
 import { getRecentAudit } from "@/server/queries/admin";
 import { formatDate } from "@/lib/utils";
+import { ScrollText } from "lucide-react";
+
+type Row = Awaited<ReturnType<typeof getRecentAudit>>[number];
 
 export default async function AdminAudit({
   params,
@@ -14,47 +21,63 @@ export default async function AdminAudit({
   await requirePermission("audit:read");
   const events = await getRecentAudit();
 
+  const columns: Column<Row>[] = [
+    {
+      key: "action",
+      label: "Action",
+      primary: true,
+      render: (e) => <span className="font-mono text-xs">{e.action}</span>,
+    },
+    {
+      key: "object",
+      label: "Object",
+      render: (e) => <span className="text-[var(--muted)]">{e.objectType}</span>,
+    },
+    {
+      key: "outcome",
+      label: "Outcome",
+      render: (e) => <StatusBadge status={e.outcome} />,
+    },
+    {
+      key: "time",
+      label: "When",
+      align: "right",
+      render: (e) => (
+        <span className="whitespace-nowrap text-[var(--muted)]">
+          {formatDate(e.occurredAt, locale, { dateStyle: "short", timeStyle: "short" })}
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold">Audit log</h1>
-        <p className="text-[var(--muted)]">
-          Append-only record of sensitive actions (PRD 19.2).
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title="Audit log"
+        description="Append-only record of sensitive actions. Tokens, secrets and record contents are never stored here."
+      />
       {events.length === 0 ? (
-        <EmptyState title="No audit events yet" />
+        <EmptyState
+          icon={<ScrollText className="size-5" aria-hidden />}
+          title="No audit events yet"
+          description="Actions such as approvals, publications and role changes will be recorded here."
+        />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border bg-[var(--card)]">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-ink-50 text-left dark:bg-ink-800">
-              <tr>
-                <th className="p-3">Time</th>
-                <th className="p-3">Action</th>
-                <th className="p-3">Object</th>
-                <th className="p-3">Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((e) => (
-                <tr key={e.id} className="border-b last:border-0">
-                  <td className="whitespace-nowrap p-3 text-[var(--muted)]">
-                    {formatDate(e.occurredAt, locale, {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
-                  </td>
-                  <td className="p-3 font-mono text-xs">{e.action}</td>
-                  <td className="p-3 text-[var(--muted)]">
-                    {e.objectType}
-                  </td>
-                  <td className="p-3">{e.outcome}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <DataList
+            columns={columns}
+            rows={events}
+            getKey={(e) => e.id}
+            caption="Recent audit events"
+          />
+          <TruncationNotice
+            count={events.length}
+            limit={100}
+            what="audit events"
+            hint="The full, append-only log is retained in the database for auditors."
+          />
+        </>
       )}
-    </div>
+    </>
   );
 }

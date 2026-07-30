@@ -32,21 +32,24 @@ export async function listVariantsForStock() {
     .select({ variant: productVariant, productName: product.name })
     .from(productVariant)
     .innerJoin(product, eq(productVariant.productId, product.id))
-    .orderBy(product.name);
+    .orderBy(product.name)
+    .limit(LIST_LIMIT);
 }
 export async function listAllExpenses() {
   return db
     .select({ claim: expenseClaim, personName: person.displayName })
     .from(expenseClaim)
     .leftJoin(person, eq(expenseClaim.personId, person.id))
-    .orderBy(desc(expenseClaim.createdAt));
+    .orderBy(desc(expenseClaim.createdAt))
+    .limit(LIST_LIMIT);
 }
 export async function myExpenses(personId: string) {
   return db
     .select()
     .from(expenseClaim)
     .where(eq(expenseClaim.personId, personId))
-    .orderBy(desc(expenseClaim.createdAt));
+    .orderBy(desc(expenseClaim.createdAt))
+    .limit(LIST_LIMIT);
 }
 export async function myPartners(personId: string) {
   return db
@@ -60,16 +63,21 @@ export async function partnerListings(partnerId: string) {
     .select()
     .from(opportunityListing)
     .where(eq(opportunityListing.partnerId, partnerId))
-    .orderBy(desc(opportunityListing.createdAt));
+    .orderBy(desc(opportunityListing.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 
 import { partnerAgreement } from "@/db/schema";
+
+/** Safety cap so no list query can return an unbounded result set. */
+const LIST_LIMIT = 500;
 
 export async function getPartnerAgreements(partnerId: string) {
   return db
     .select()
     .from(partnerAgreement)
     .where(eq(partnerAgreement.partnerId, partnerId))
-    .orderBy(desc(partnerAgreement.createdAt));
+    .orderBy(desc(partnerAgreement.createdAt))
+    .limit(LIST_LIMIT);
 }

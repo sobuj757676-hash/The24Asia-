@@ -3,13 +3,19 @@ import { desc } from "drizzle-orm";
 import { db } from "@/db";
 import { newsletterCampaign, subscriber } from "@/db/schema";
 import { requirePermission } from "@/lib/auth/session";
-import { Card, CardBody, CardTitle } from "@/components/ui/card";
+import { PageHeader, SectionHeader } from "@/components/ui/page-header";
+import { StatCard, StatGrid } from "@/components/ui/stat-card";
+import { Card, CardBody } from "@/components/ui/card";
+import { FormCard, FormRow } from "@/components/ui/form";
 import { Field, Input, Textarea, Select } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge, EmptyState, Stat } from "@/components/ui/misc";
+import { StatusBadge, Badge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SendCampaignButton } from "@/components/admin/send-campaign";
 import { saveCampaign } from "@/server/actions/comms";
 import { formatDate } from "@/lib/utils";
+import { Megaphone, Send, Mail, Users, Info } from "lucide-react";
+
+const TOPICS = ["service", "safety", "learning", "events", "volunteering", "fundraising", "marketing"];
 
 export default async function AdminComms({
   params,
@@ -20,97 +26,152 @@ export default async function AdminComms({
   setRequestLocale(locale);
   await requirePermission("content:publish");
 
-  const campaigns = await db
-    .select()
-    .from(newsletterCampaign)
-    .orderBy(desc(newsletterCampaign.createdAt));
-  const subscribers = await db.select().from(subscriber).orderBy(desc(subscriber.createdAt)).limit(500);
+  const [campaigns, subscribers] = await Promise.all([
+    db.select().from(newsletterCampaign).orderBy(desc(newsletterCampaign.createdAt)),
+    db.select().from(subscriber).orderBy(desc(subscriber.createdAt)).limit(500),
+  ]);
+
+  const sent = campaigns.filter((c) => c.status === "sent");
+  const drafts = campaigns.filter((c) => c.status !== "sent");
+  const reached = sent.reduce((n, c) => n + c.recipientCount, 0);
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-extrabold">Communications</h1>
+    <>
+      <PageHeader
+        title="Communications"
+        description="Send in-app and push messages to people who have consented to that topic. Service messages are kept separate from marketing."
+      />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat value={String(campaigns.length)} label="Campaigns" />
-        <Stat value={String(subscribers.length)} label="Subscribers" />
-        <Stat value={String(campaigns.filter((c) => c.status === "sent").length)} label="Sent" />
+      <StatGrid>
+        <StatCard label="Campaigns" value={campaigns.length} icon={<Megaphone className="size-4" />} />
+        <StatCard label="Sent" value={sent.length} icon={<Send className="size-4" />} />
+        <StatCard label="People reached" value={reached} icon={<Users className="size-4" />} />
+        <StatCard label="Newsletter subscribers" value={subscribers.length} icon={<Mail className="size-4" />} />
+      </StatGrid>
+
+      <div className="mt-6 flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 text-sm dark:border-sky-800 dark:bg-sky-900/20">
+        <Info className="mt-0.5 size-4 shrink-0 text-sky-600" aria-hidden />
+        <p>
+          The audience is built from each person&apos;s communication preferences — anyone who has
+          opted out of the topic is excluded automatically. Keep lock-screen copy discreet: it must
+          not reveal someone&apos;s circumstances.
+        </p>
       </div>
 
-      <section>
-        <h2 className="mb-3 text-lg font-bold">New campaign</h2>
-        <Card>
-          <CardBody>
-            <form action={saveCampaign} className="grid gap-4 sm:grid-cols-2">
-              <Field label="Title (internal)" htmlFor="title" required>
-                <Input id="title" name="title" required />
-              </Field>
-              <Field label="Topic" htmlFor="topic">
-                <Select id="topic" name="topic" defaultValue="marketing">
-                  {["service","safety","learning","events","volunteering","fundraising","marketing"].map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </Select>
-              </Field>
-              <div className="sm:col-span-2">
-                <Field label="Subject" htmlFor="subject" required>
-                  <Input id="subject" name="subject" required />
-                </Field>
-              </div>
-              <div className="sm:col-span-2">
-                <Field label="Message" htmlFor="body" required>
-                  <Textarea id="body" name="body" className="min-h-32" required />
-                </Field>
-              </div>
-              <Field label="Channel" htmlFor="channel">
-                <Select id="channel" name="channel" defaultValue="in_app">
-                  <option value="in_app">In-app + push</option>
-                  <option value="email">Email</option>
-                </Select>
-              </Field>
-              <div className="sm:col-span-2"><Button type="submit">Save draft</Button></div>
-            </form>
-          </CardBody>
-        </Card>
-      </section>
+      <div className="mt-8">
+        <FormCard
+          title="New campaign"
+          description="Saved as a draft first, so you can review before sending."
+          action={saveCampaign}
+          submitLabel="Save draft"
+        >
+          <Field label="Internal title" htmlFor="title" required hint="Only staff see this">
+            <Input id="title" name="title" required />
+          </Field>
+          <Field label="Topic" htmlFor="topic" hint="Determines who receives it">
+            <Select id="topic" name="topic" defaultValue="marketing">
+              {TOPICS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <FormRow>
+            <Field label="Subject" htmlFor="subject" required hint="Keep it discreet">
+              <Input id="subject" name="subject" required />
+            </Field>
+          </FormRow>
+          <FormRow>
+            <Field label="Message" htmlFor="body" required>
+              <Textarea id="body" name="body" className="min-h-32" required />
+            </Field>
+          </FormRow>
+          <Field label="Channel" htmlFor="channel">
+            <Select id="channel" name="channel" defaultValue="in_app">
+              <option value="in_app">In-app + push</option>
+              <option value="email">Email</option>
+            </Select>
+          </Field>
+        </FormCard>
+      </div>
 
-      <section>
-        <h2 className="mb-3 text-lg font-bold">Campaigns</h2>
-        {campaigns.length === 0 ? (
-          <EmptyState title="No campaigns yet" />
+      <section className="mt-8">
+        <SectionHeader title={`Drafts & scheduled (${drafts.length})`} />
+        {drafts.length === 0 ? (
+          <EmptyState compact title="No drafts" description="Create a campaign above to get started." />
         ) : (
-          <div className="space-y-2">
-            {campaigns.map((c) => (
-              <Card key={c.id}>
-                <CardBody className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base">{c.subject}</CardTitle>
-                    <p className="text-sm text-[var(--muted)]">
-                      {c.topic} · {c.channel}
-                      {c.sentAt ? ` · sent ${formatDate(c.sentAt, locale)} to ${c.recipientCount}` : ""}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge tone={c.status === "sent" ? "success" : "neutral"}>{c.status}</Badge>
-                    {c.status !== "sent" && <SendCampaignButton id={c.id} />}
-                  </div>
-                </CardBody>
-              </Card>
+          <ul className="space-y-2">
+            {drafts.map((c) => (
+              <li key={c.id}>
+                <Card>
+                  <CardBody className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{c.subject}</p>
+                      <p className="truncate text-sm text-[var(--muted)]">
+                        {c.title} · {c.topic} · {c.channel.replace(/_/g, "-")}
+                      </p>
+                    </div>
+                    <span className="flex items-center gap-2">
+                      <StatusBadge status={c.status} />
+                      <SendCampaignButton id={c.id} />
+                    </span>
+                  </CardBody>
+                </Card>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
 
-      <section>
-        <h2 className="mb-3 text-lg font-bold">Subscribers ({subscribers.length})</h2>
-        <div className="max-h-64 overflow-y-auto rounded-xl border bg-[var(--card)]">
-          {subscribers.map((s) => (
-            <div key={s.id} className="border-b px-3 py-2 text-sm last:border-0">
-              {s.email}
-            </div>
-          ))}
-          {subscribers.length === 0 && <p className="p-3 text-sm text-[var(--muted)]">No subscribers yet.</p>}
-        </div>
+      {sent.length > 0 && (
+        <section className="mt-8">
+          <SectionHeader title={`Sent (${sent.length})`} />
+          <ul className="space-y-2">
+            {sent.map((c) => (
+              <li key={c.id}>
+                <Card>
+                  <CardBody className="flex flex-wrap items-center justify-between gap-3 p-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{c.subject}</p>
+                      <p className="truncate text-xs text-[var(--muted)]">
+                        {c.sentAt ? `Sent ${formatDate(c.sentAt, locale, { dateStyle: "medium" })}` : ""} ·{" "}
+                        {c.recipientCount} recipients
+                      </p>
+                    </div>
+                    <StatusBadge status={c.status} />
+                  </CardBody>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="mt-8">
+        <SectionHeader
+          title={`Newsletter subscribers (${subscribers.length})`}
+          description="Collected from the public site footer."
+        />
+        {subscribers.length === 0 ? (
+          <EmptyState compact title="No subscribers yet" />
+        ) : (
+          <Card>
+            <CardBody className="max-h-72 overflow-y-auto p-0">
+              <ul className="divide-y">
+                {subscribers.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                    <span className="truncate">{s.email}</span>
+                    <Badge tone={s.unsubscribedAt ? "neutral" : "success"}>
+                      {s.unsubscribedAt ? "Unsubscribed" : "Subscribed"}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            </CardBody>
+          </Card>
+        )}
       </section>
-    </div>
+    </>
   );
 }

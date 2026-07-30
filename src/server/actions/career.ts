@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
@@ -57,6 +57,24 @@ export async function deleteListing(id: string) {
 export async function applyToListing(listingId: string, formData: FormData) {
   const user = await requireUser();
   const consent = formData.get("consentToShare") === "on";
+  // Sharing a profile with an external employer requires explicit consent
+  // (PRD data-minimisation); without it there is nothing we may lawfully send.
+  if (!consent) redirect(`/careers?error=consent_required#listing-${listingId}`);
+
+  // Applying twice to the same listing is never intentional — treat a repeat
+  // submission as a no-op instead of creating duplicate rows for reviewers.
+  const existing = await db
+    .select({ id: listingApplication.id })
+    .from(listingApplication)
+    .where(
+      and(
+        eq(listingApplication.listingId, listingId),
+        eq(listingApplication.personId, user.personId),
+      ),
+    )
+    .limit(1);
+  if (existing[0]) redirect("/account?applied=already");
+
   await db.insert(listingApplication).values({
     listingId,
     personId: user.personId,
@@ -136,6 +154,7 @@ export async function registerMentor(formData: FormData) {
     personId: user.personId,
     bio: s(formData, "bio"),
     expertise: (s(formData, "expertise") || "").split(",").map((x) => x.trim()).filter(Boolean),
+    languages: (s(formData, "languages") || "").split(",").map((x) => x.trim()).filter(Boolean),
   });
   revalidatePath("/account/career");
 }

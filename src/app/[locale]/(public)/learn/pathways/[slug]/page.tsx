@@ -19,7 +19,7 @@ export default async function PathwayDetail({
   return (
     <Section>
       <Container className="max-w-2xl">
-        <Link href="/learn/pathways" className="text-sm text-brand-700">← Pathways</Link>
+        <Link href="/learn/pathways" className="text-sm text-brand-700 dark:text-brand-300">← Pathways</Link>
         <h1 className="mt-3 text-3xl font-extrabold">{path.title}</h1>
         {path.description && <p className="mt-2 text-[var(--muted)]">{path.description}</p>}
         <ol className="mt-6 space-y-3">
@@ -30,7 +30,7 @@ export default async function PathwayDetail({
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-600 font-bold text-white">
                     {i + 1}
                   </span>
-                  <Link href={`/learn/${s.course.slug}`} className="font-medium hover:text-brand-700">
+                  <Link href={`/learn/${s.course.slug}`} className="font-medium hover:text-brand-700 dark:text-brand-300">
                     {s.course.title}
                   </Link>
                 </CardBody>

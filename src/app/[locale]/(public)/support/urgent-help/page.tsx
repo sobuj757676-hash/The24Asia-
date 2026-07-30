@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Container, Section, Badge } from "@/components/ui/misc";
+import { Container, Section } from "@/components/ui/misc";
+import { Badge } from "@/components/ui/status-badge";
 import { Phone, ExternalLink } from "lucide-react";
 import { getUrgentHelpServices } from "@/server/queries/public";
 
@@ -38,7 +39,7 @@ export default async function UrgentHelpPage({
                 {s.contactPhone && (
                   <a
                     href={`tel:${s.contactPhone}`}
-                    className="flex items-center gap-1.5 font-medium text-brand-700"
+                    className="flex items-center gap-1.5 font-medium text-brand-700 dark:text-brand-300"
                   >
                     <Phone className="size-4" aria-hidden /> {s.contactPhone}
                   </a>
@@ -48,7 +49,7 @@ export default async function UrgentHelpPage({
                     href={s.contactUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 font-medium text-brand-700"
+                    className="flex items-center gap-1.5 font-medium text-brand-700 dark:text-brand-300"
                   >
                     <ExternalLink className="size-4" aria-hidden /> Website
                   </a>

@@ -41,7 +41,7 @@ export function ContactForm({ type = "contact" }: { type?: string }) {
         <Textarea id="message" name="message" required />
       </Field>
       {state.error && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-sm text-danger-fg">
           {state.error}
         </p>
       )}

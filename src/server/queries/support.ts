@@ -10,12 +10,16 @@ import {
   person,
 } from "@/db/schema";
 
+/** Safety cap so no list query can return an unbounded result set. */
+const LIST_LIMIT = 500;
+
 export async function mySupportRequests(personId: string) {
   return db
     .select()
     .from(supportRequest)
     .where(eq(supportRequest.personId, personId))
-    .orderBy(desc(supportRequest.createdAt));
+    .orderBy(desc(supportRequest.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function listPublishedListings() {
@@ -23,14 +27,16 @@ export async function listPublishedListings() {
     .select()
     .from(opportunityListing)
     .where(eq(opportunityListing.published, true))
-    .orderBy(desc(opportunityListing.createdAt));
+    .orderBy(desc(opportunityListing.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function listAllListings() {
   return db
     .select()
     .from(opportunityListing)
-    .orderBy(desc(opportunityListing.createdAt));
+    .orderBy(desc(opportunityListing.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function myGoals(personId: string) {
@@ -38,7 +44,8 @@ export async function myGoals(personId: string) {
     .select()
     .from(careerGoal)
     .where(eq(careerGoal.personId, personId))
-    .orderBy(desc(careerGoal.createdAt));
+    .orderBy(desc(careerGoal.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function myMatches(personId: string) {
@@ -46,7 +53,8 @@ export async function myMatches(personId: string) {
     .select()
     .from(mentorMatch)
     .where(eq(mentorMatch.menteeId, personId))
-    .orderBy(desc(mentorMatch.createdAt));
+    .orderBy(desc(mentorMatch.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function isMentor(personId: string) {

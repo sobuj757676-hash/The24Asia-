@@ -6,9 +6,10 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { donation, campaign } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getPaymentProvider } from "@/lib/payments/provider";
+import { getPaymentProvider, PAYMENTS_MODE } from "@/lib/payments/provider";
 import { fulfillDonation, fulfillOrder } from "@/lib/payments/fulfill";
 import { audit } from "@/lib/audit";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 /**
  * Starts a one-time donation (PRD FUND-001..003). Creates the record, then
@@ -17,6 +18,10 @@ import { audit } from "@/lib/audit";
  * browser redirect alone.
  */
 export async function startDonation(formData: FormData) {
+  // Unauthenticated and it creates a row plus a provider checkout, so it is the
+  // most attractive target for automated abuse on the whole site.
+  await enforceRateLimit("donate");
+
   const parsed = z
     .object({
       amount: z.coerce.number().min(1).max(100000),
@@ -80,6 +85,12 @@ export async function startDonation(formData: FormData) {
  * this instead.
  */
 export async function confirmTestPayment(kind: "donation" | "order", refId: string) {
+  // SECURITY: this simulates a provider callback and must never be reachable
+  // once a real payment processor is configured, otherwise anyone could mark an
+  // arbitrary donation/order as paid without paying.
+  if (PAYMENTS_MODE !== "test") {
+    throw new Error("Test payment confirmation is disabled in live payment mode.");
+  }
   if (kind === "donation") {
     await fulfillDonation(refId);
     redirect(`/donate/thank-you?id=${refId}`);

@@ -2,10 +2,15 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requirePermission } from "@/lib/auth/session";
-import { Card, CardBody, CardTitle } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge, EmptyState } from "@/components/ui/misc";
+import { PageHeader, SectionHeader } from "@/components/ui/page-header";
+import { StatCard, StatGrid } from "@/components/ui/stat-card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FormGrid, FormRow } from "@/components/ui/form";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { CalendarDays, Users, UserCheck } from "lucide-react";
 import { AttendanceControls } from "@/components/admin/attendance-controls";
 import { getCohortDetail, getSessionRoster } from "@/server/queries/learning";
 import { addCohortSession } from "@/server/actions/manage";
@@ -27,82 +32,174 @@ export default async function CohortDetail({
   if (!detail) notFound();
   const roster = session ? await getSessionRoster(session) : null;
 
+  const presentCount =
+    roster?.roster.filter((r) => r.status === "present").length ?? 0;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold">{detail.course.title}</h1>
-          <p className="text-[var(--muted)]">
-            {detail.cohort.code} · {detail.cohort.locationName}
-          </p>
-        </div>
-        <Link href="/admin/programs" className="text-sm text-brand-700">← Programs</Link>
-      </div>
+    <>
+      <PageHeader
+        title={detail.course.title}
+        description={[detail.cohort.code, detail.cohort.locationName]
+          .filter(Boolean)
+          .join(" · ")}
+        breadcrumb={
+          <Link href="/admin/programs" className="hover:underline">
+            ← Programs
+          </Link>
+        }
+        actions={<StatusBadge status={detail.cohort.status} />}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <StatGrid cols={3}>
+        <StatCard
+          label="Sessions"
+          value={detail.sessions.length}
+          icon={<CalendarDays className="size-4" />}
+        />
+        <StatCard
+          label="Capacity"
+          value={detail.cohort.capacity ?? "—"}
+          icon={<Users className="size-4" />}
+        />
+        <StatCard
+          label={roster ? "Present this session" : "Select a session"}
+          value={roster ? presentCount : "—"}
+          hint={roster ? `of ${roster.roster.length} enrolled` : "to mark attendance"}
+          icon={<UserCheck className="size-4" />}
+          tone="neutral"
+        />
+      </StatGrid>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {/* Sessions */}
-        <Card>
-          <CardBody>
-            <CardTitle className="text-base">Sessions</CardTitle>
-            <ul className="mt-3 space-y-1">
-              {detail.sessions.map((s) => (
-                <li key={s.id}>
-                  <Link
-                    href={`/admin/programs/cohorts/${id}?session=${s.id}`}
-                    className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${session === s.id ? "border-brand-600" : ""}`}
-                  >
-                    <span>#{s.sequence} {s.title}</span>
-                    <span className="text-xs text-[var(--muted)]">
-                      {formatDate(s.startsAt, locale, { dateStyle: "medium", timeStyle: "short" })}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-              {detail.sessions.length === 0 && (
-                <li className="text-sm text-[var(--muted)]">No sessions yet.</li>
-              )}
+        <section>
+          <SectionHeader
+            title="Sessions"
+            description="Choose a session to take attendance."
+          />
+          {detail.sessions.length === 0 ? (
+            <EmptyState
+              compact
+              icon={<CalendarDays className="size-5" aria-hidden />}
+              title="No sessions scheduled"
+              description="Add the first session below so learners can see the timetable."
+            />
+          ) : (
+            <ul className="space-y-1.5">
+              {detail.sessions.map((s) => {
+                const active = session === s.id;
+                return (
+                  <li key={s.id}>
+                    <Link
+                      href={`/admin/programs/cohorts/${id}?session=${s.id}`}
+                      aria-current={active ? "true" : undefined}
+                      className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-[var(--card)] px-3 py-2.5 text-sm transition-colors hover:border-brand-400 ${
+                        active ? "border-brand-500 ring-1 ring-brand-200" : ""
+                      }`}
+                    >
+                      <span className="font-medium">
+                        <span className="mr-1.5 text-[var(--muted)]">#{s.sequence}</span>
+                        {s.title ?? "Session"}
+                      </span>
+                      <span className="text-xs text-[var(--muted)]">
+                        {formatDate(s.startsAt, locale, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
+          )}
 
-            <form action={addCohortSession} className="mt-4 grid gap-2 border-t pt-4 sm:grid-cols-2">
-              <input type="hidden" name="cohortId" value={id} />
-              <Field label="Sequence" htmlFor="sequence"><Input id="sequence" name="sequence" type="number" defaultValue={detail.sessions.length + 1} /></Field>
-              <Field label="Title" htmlFor="title"><Input id="title" name="title" placeholder="Session title" /></Field>
-              <div className="sm:col-span-2">
-                <Field label="Starts at" htmlFor="startsAt"><Input id="startsAt" name="startsAt" type="datetime-local" required /></Field>
-              </div>
-              <div className="sm:col-span-2"><Button type="submit" size="sm">Add session</Button></div>
-            </form>
-          </CardBody>
-        </Card>
+          <Card className="mt-4">
+            <CardBody>
+              <h3 className="mb-3 text-sm font-semibold">Add a session</h3>
+              <form action={addCohortSession} className="space-y-4">
+                <input type="hidden" name="cohortId" value={id} />
+                <FormGrid columns={2}>
+                  <Field label="Sequence" htmlFor="sequence">
+                    <Input
+                      id="sequence"
+                      name="sequence"
+                      type="number"
+                      min="1"
+                      defaultValue={detail.sessions.length + 1}
+                    />
+                  </Field>
+                  <Field label="Title" htmlFor="title">
+                    <Input id="title" name="title" placeholder="Session title" />
+                  </Field>
+                  <FormRow>
+                    <Field label="Starts at" htmlFor="startsAt" required>
+                      <Input
+                        id="startsAt"
+                        name="startsAt"
+                        type="datetime-local"
+                        required
+                      />
+                    </Field>
+                  </FormRow>
+                </FormGrid>
+                <SubmitButton size="sm" pendingLabel="Adding…">
+                  Add session
+                </SubmitButton>
+              </form>
+            </CardBody>
+          </Card>
+        </section>
 
         {/* Roster / attendance */}
-        <Card>
-          <CardBody>
-            <CardTitle className="text-base">
-              {roster ? `Attendance — ${roster.session.title ?? "Session"}` : "Attendance"}
-            </CardTitle>
-            {!roster ? (
-              <p className="mt-2 text-sm text-[var(--muted)]">Select a session to mark attendance.</p>
-            ) : roster.roster.length === 0 ? (
-              <EmptyState title="No enrolled learners" />
-            ) : (
-              <ul className="mt-3 space-y-2">
-                {roster.roster.map((r) => (
-                  <li key={r.personId} className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
-                    <span className="text-sm font-medium">{r.name ?? "Learner"}</span>
-                    <div className="flex items-center gap-2">
-                      <Badge tone={r.status === "present" ? "success" : r.status === "no_show" ? "danger" : "neutral"}>
-                        {r.status.replace(/_/g, " ")}
-                      </Badge>
-                      <AttendanceControls sessionId={roster.session.id} personId={r.personId} current={r.status} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardBody>
-        </Card>
+        <section>
+          <SectionHeader
+            title={roster ? `Attendance — ${roster.session.title ?? "Session"}` : "Attendance"}
+            description={
+              roster
+                ? formatDate(roster.session.startsAt, locale, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })
+                : undefined
+            }
+          />
+          {!roster ? (
+            <EmptyState
+              compact
+              icon={<UserCheck className="size-5" aria-hidden />}
+              title="No session selected"
+              description="Pick a session from the list to mark who attended."
+            />
+          ) : roster.roster.length === 0 ? (
+            <EmptyState
+              compact
+              icon={<Users className="size-5" aria-hidden />}
+              title="No enrolled learners"
+              description="Enrol learners into this cohort before taking attendance."
+            />
+          ) : (
+            <ul className="space-y-2">
+              {roster.roster.map((r) => (
+                <li
+                  key={r.personId}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-[var(--card)] px-3 py-2.5"
+                >
+                  <span className="text-sm font-medium">{r.name ?? "Learner"}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status={r.status} />
+                    <AttendanceControls
+                      sessionId={roster.session.id}
+                      personId={r.personId}
+                      current={r.status}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
-    </div>
+    </>
   );
 }

@@ -9,10 +9,13 @@ const intlMiddleware = createMiddleware(routing);
  * Route groups that require an authenticated session. Fine-grained permission
  * checks happen server-side in each segment (PRD 10.8); this is only a coarse
  * gate + redirect so unauthenticated users never see portal shells.
+ *
+ * Named `proxy` rather than `middleware`: Next.js 16 deprecated the middleware
+ * file convention in favour of this one.
  */
 const PROTECTED = /^\/(en|bn|ta)?\/?(admin|account|volunteer-portal|partner-portal)(\/|$)/;
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (PROTECTED.test(pathname)) {
