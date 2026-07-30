@@ -1,17 +1,19 @@
 import { setRequestLocale } from "next-intl/server";
-import { requirePermission } from "@/lib/auth/session";
-import { Card, CardBody } from "@/components/ui/card";
-import { Badge, EmptyState, Stat } from "@/components/ui/misc";
-import { ActionButton } from "@/components/admin/row-actions";
-import {
-  listDonations,
-  listOrders,
-  getFinanceTotals,
-} from "@/server/queries/admin";
-import { refundDonation, setOrderStatus } from "@/server/actions/finance";
-import { formatDate } from "@/lib/utils";
+import { requirePermission, getCurrentUser } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
-import { getCurrentUser } from "@/lib/auth/session";
+import { PageHeader, SectionHeader } from "@/components/ui/page-header";
+import { StatCard, StatGrid } from "@/components/ui/stat-card";
+import { StatusBadge, Badge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { DataList, type Column } from "@/components/ui/data-list";
+import { ActionButton } from "@/components/admin/row-actions";
+import { listDonations, listOrders, getFinanceTotals } from "@/server/queries/admin";
+import { refundDonation, setOrderStatus } from "@/server/actions/finance";
+import { formatDate, formatMoney } from "@/lib/utils";
+import { Wallet, HandCoins, ShoppingBag, Package } from "lucide-react";
+
+type DonationRow = Awaited<ReturnType<typeof listDonations>>[number];
+type OrderRow = Awaited<ReturnType<typeof listOrders>>[number];
 
 export default async function AdminFinance({
   params,
@@ -30,87 +32,160 @@ export default async function AdminFinance({
     getFinanceTotals(),
   ]);
 
+  const completedGifts = donations.filter((d) => d.status === "completed").length;
+  const pendingOrders = orders.filter((o) =>
+    ["submitted", "awaiting_payment", "confirmed"].includes(o.status),
+  ).length;
+
+  const donationColumns: Column<DonationRow>[] = [
+    {
+      key: "amount",
+      label: "Amount",
+      primary: true,
+      render: (d) => (
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold tabular-nums">
+            {formatMoney(d.amountCents, d.currency, locale)}
+          </span>
+          {d.anonymous && <Badge>Anonymous</Badge>}
+        </span>
+      ),
+    },
+    { key: "status", label: "Status", render: (d) => <StatusBadge status={d.status} /> },
+    {
+      key: "ref",
+      label: "Reference",
+      hideOnMobile: true,
+      render: (d) => (
+        <span className="font-mono text-xs text-[var(--muted)]">
+          {d.providerReference ? d.providerReference.slice(0, 18) : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "date",
+      label: "Received",
+      render: (d) => (
+        <span className="whitespace-nowrap text-[var(--muted)]">
+          {formatDate(d.createdAt, locale, { dateStyle: "medium" })}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      align: "right",
+      render: (d) =>
+        canRefund && d.status === "completed" ? (
+          <ActionButton
+            action={refundDonation.bind(null, d.id)}
+            label="Refund"
+            variant="danger"
+            confirmTitle="Refund this donation?"
+            confirm={`${formatMoney(d.amountCents, d.currency, locale)} will be returned to the donor and the gift marked refunded. This is recorded against your name.`}
+            successMessage="Donation refunded"
+          />
+        ) : (
+          <span className="text-xs text-[var(--muted)]">—</span>
+        ),
+    },
+  ];
+
+  const orderColumns: Column<OrderRow>[] = [
+    {
+      key: "total",
+      label: "Order",
+      primary: true,
+      render: (o) => (
+        <span className="font-semibold tabular-nums">
+          {formatMoney(o.totalCents, o.currency, locale)}
+        </span>
+      ),
+    },
+    { key: "status", label: "Status", render: (o) => <StatusBadge status={o.status} /> },
+    {
+      key: "fulfilment",
+      label: "Fulfilment",
+      render: (o) => <Badge>{o.fulfilment}</Badge>,
+    },
+    {
+      key: "date",
+      label: "Placed",
+      render: (o) => (
+        <span className="whitespace-nowrap text-[var(--muted)]">
+          {formatDate(o.createdAt, locale, { dateStyle: "medium" })}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      align: "right",
+      render: (o) =>
+        ["confirmed", "submitted"].includes(o.status) ? (
+          <ActionButton
+            action={setOrderStatus.bind(null, o.id, "fulfilled")}
+            label="Mark fulfilled"
+            variant="outline"
+            successMessage="Order marked fulfilled"
+          />
+        ) : (
+          <span className="text-xs text-[var(--muted)]">—</span>
+        ),
+    },
+  ];
+
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-extrabold">Finance</h1>
+    <>
+      <PageHeader
+        title="Finance"
+        description="Donations and merchandise orders. Card details never touch this platform — payments are handled by the hosted provider."
+      />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat value={`S$${(totals.donatedCents / 100).toFixed(0)}`} label="Donations received" />
-        <Stat value={String(donations.length)} label="Donation records" />
-        <Stat value={String(orders.length)} label="Shop orders" />
-      </div>
+      <StatGrid>
+        <StatCard
+          label="Donations received"
+          value={formatMoney(totals.donatedCents, "SGD", locale, true)}
+          icon={<Wallet className="size-4" />}
+        />
+        <StatCard label="Completed gifts" value={completedGifts} icon={<HandCoins className="size-4" />} />
+        <StatCard label="Shop orders" value={orders.length} icon={<ShoppingBag className="size-4" />} />
+        <StatCard
+          label="Orders to fulfil"
+          value={pendingOrders}
+          icon={<Package className="size-4" />}
+          tone={pendingOrders > 0 ? "accent" : "neutral"}
+        />
+      </StatGrid>
 
-      <section>
-        <h2 className="mb-3 text-lg font-bold">Donations</h2>
+      <section className="mt-8">
+        <SectionHeader
+          title={`Donations (${donations.length})`}
+          description={canRefund ? undefined : "Refunds require the finance approver role."}
+        />
         {donations.length === 0 ? (
-          <EmptyState title="No donations yet" />
+          <EmptyState
+            icon={<Wallet className="size-5" aria-hidden />}
+            title="No donations yet"
+            description="Gifts appear here as soon as the payment provider confirms them."
+          />
         ) : (
-          <div className="space-y-2">
-            {donations.map((d) => (
-              <Card key={d.id}>
-                <CardBody className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">
-                      S${(d.amountCents / 100).toFixed(2)}{" "}
-                      {d.anonymous && <span className="text-xs text-[var(--muted)]">(anonymous)</span>}
-                    </p>
-                    <p className="text-sm text-[var(--muted)]">
-                      {formatDate(d.createdAt, locale, { dateStyle: "medium", timeStyle: "short" })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge tone={d.status === "completed" ? "success" : d.status === "refunded" ? "danger" : "neutral"}>
-                      {d.status}
-                    </Badge>
-                    {canRefund && d.status === "completed" && (
-                      <ActionButton
-                        action={refundDonation.bind(null, d.id)}
-                        label="Refund"
-                        variant="danger"
-                        confirm="Refund this donation?"
-                        successMessage="Refunded"
-                      />
-                    )}
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
+          <DataList columns={donationColumns} rows={donations} getKey={(d) => d.id} caption="Donations" />
         )}
       </section>
 
-      <section>
-        <h2 className="mb-3 text-lg font-bold">Shop orders</h2>
+      <section className="mt-8">
+        <SectionHeader title={`Shop orders (${orders.length})`} />
         {orders.length === 0 ? (
-          <EmptyState title="No orders yet" />
+          <EmptyState
+            icon={<ShoppingBag className="size-5" aria-hidden />}
+            title="No orders yet"
+            description="Merchandise orders will appear here."
+          />
         ) : (
-          <div className="space-y-2">
-            {orders.map((o) => (
-              <Card key={o.id}>
-                <CardBody className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">S${(o.totalCents / 100).toFixed(2)}</p>
-                    <p className="text-sm text-[var(--muted)]">
-                      {o.fulfilment} · {formatDate(o.createdAt, locale, { dateStyle: "medium" })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge>{o.status.replace(/_/g, " ")}</Badge>
-                    {(o.status === "confirmed" || o.status === "submitted") && (
-                      <ActionButton
-                        action={setOrderStatus.bind(null, o.id, "fulfilled")}
-                        label="Mark fulfilled"
-                        variant="outline"
-                        successMessage="Fulfilled"
-                      />
-                    )}
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
+          <DataList columns={orderColumns} rows={orders} getKey={(o) => o.id} caption="Shop orders" />
         )}
       </section>
-    </div>
+    </>
   );
 }
