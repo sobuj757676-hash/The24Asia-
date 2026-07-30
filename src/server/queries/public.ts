@@ -20,7 +20,8 @@ export async function getPublishedImpactMetrics() {
     .select()
     .from(impactMetric)
     .where(eq(impactMetric.publishedPublicly, true))
-    .orderBy(asc(impactMetric.displayOrder));
+    .orderBy(asc(impactMetric.displayOrder))
+    .limit(LIST_LIMIT);
 }
 
 export async function getPublishedCourses() {
@@ -28,7 +29,8 @@ export async function getPublishedCourses() {
     .select()
     .from(course)
     .where(eq(course.published, true))
-    .orderBy(asc(course.displayOrder));
+    .orderBy(asc(course.displayOrder))
+    .limit(LIST_LIMIT);
 }
 
 export async function getCourseBySlug(slug: string) {
@@ -55,7 +57,8 @@ export async function getOpenCohorts(courseId?: string) {
         sql`${cohort.status} = ANY(ARRAY['published','registration_open','waitlist_only']::cohort_status[])`,
       ),
     )
-    .orderBy(asc(cohort.startDate));
+    .orderBy(asc(cohort.startDate))
+    .limit(LIST_LIMIT);
   return rows;
 }
 
@@ -93,7 +96,8 @@ export async function getPublishedOpportunities() {
     .select()
     .from(opportunity)
     .where(eq(opportunity.published, true))
-    .orderBy(desc(opportunity.createdAt));
+    .orderBy(desc(opportunity.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getPublishedServices() {
@@ -101,7 +105,8 @@ export async function getPublishedServices() {
     .select()
     .from(service)
     .where(eq(service.published, true))
-    .orderBy(desc(service.isUrgentHelp));
+    .orderBy(desc(service.isUrgentHelp))
+    .limit(LIST_LIMIT);
 }
 
 export async function getUrgentHelpServices() {
@@ -125,11 +130,12 @@ export async function getPublicPartners() {
     .select()
     .from(partner)
     .where(eq(partner.displayPublicly, true))
-    .orderBy(asc(partner.displayOrder));
+    .orderBy(asc(partner.displayOrder))
+    .limit(LIST_LIMIT);
 }
 
 export async function getAwards() {
-  return db.select().from(award).orderBy(asc(award.displayOrder));
+  return db.select().from(award).orderBy(asc(award.displayOrder)).limit(LIST_LIMIT);
 }
 
 /** Certificate verification (PRD LMS-011): exposes only approved fields. */
@@ -170,7 +176,8 @@ export async function getPublishedProducts() {
     .select()
     .from(product)
     .where(eq(product.published, true))
-    .orderBy(desc(product.createdAt));
+    .orderBy(desc(product.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getProductBySlug(slug: string) {
@@ -191,6 +198,9 @@ export async function getProductBySlug(slug: string) {
 
 import { ilike, or } from "drizzle-orm";
 import { contentItem, contentTranslation, policy } from "@/db/schema";
+
+/** Safety cap so no list query can return an unbounded result set. */
+const LIST_LIMIT = 500;
 
 /** Global search across public content (PRD WEB-004/005). */
 export async function searchPublic(q: string) {

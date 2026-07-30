@@ -10,12 +10,15 @@ import {
   person,
 } from "@/db/schema";
 
+/** Safety cap so no list query can return an unbounded result set. */
+const LIST_LIMIT = 500;
+
 export async function listActiveGroups() {
   return db.select().from(group).where(eq(group.active, true)).orderBy(group.name);
 }
 
 export async function listAllGroups() {
-  return db.select().from(group).orderBy(group.name);
+  return db.select().from(group).orderBy(group.name).limit(LIST_LIMIT);
 }
 
 export async function getGroupBySlug(slug: string) {
@@ -59,7 +62,8 @@ export async function getPostReplies(postId: string) {
     .from(reply)
     .innerJoin(person, eq(reply.authorId, person.id))
     .where(and(eq(reply.postId, postId), eq(reply.status, "published")))
-    .orderBy(reply.createdAt);
+    .orderBy(reply.createdAt)
+    .limit(LIST_LIMIT);
 }
 
 /* ------------------------------------------------------------- moderation */
@@ -69,13 +73,15 @@ export async function moderationQueue() {
     .select()
     .from(contentReport)
     .where(eq(contentReport.status, "queued"))
-    .orderBy(desc(contentReport.createdAt));
+    .orderBy(desc(contentReport.createdAt))
+    .limit(LIST_LIMIT);
   const pendingPosts = await db
     .select({ post, authorName: person.displayName })
     .from(post)
     .innerJoin(person, eq(post.authorId, person.id))
     .where(eq(post.status, "pending"))
-    .orderBy(desc(post.createdAt));
+    .orderBy(desc(post.createdAt))
+    .limit(LIST_LIMIT);
   return { reports, pendingPosts };
 }
 

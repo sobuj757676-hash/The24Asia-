@@ -27,7 +27,8 @@ export async function getMyApplications(personId: string) {
     .innerJoin(cohort, eq(courseApplication.cohortId, cohort.id))
     .innerJoin(course, eq(cohort.courseId, course.id))
     .where(eq(courseApplication.personId, personId))
-    .orderBy(desc(courseApplication.createdAt));
+    .orderBy(desc(courseApplication.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getMyEnrollments(personId: string) {
@@ -41,7 +42,8 @@ export async function getMyEnrollments(personId: string) {
     .innerJoin(cohort, eq(enrollment.cohortId, cohort.id))
     .innerJoin(course, eq(cohort.courseId, course.id))
     .where(eq(enrollment.personId, personId))
-    .orderBy(desc(enrollment.createdAt));
+    .orderBy(desc(enrollment.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getMyCertificates(personId: string) {
@@ -49,7 +51,8 @@ export async function getMyCertificates(personId: string) {
     .select()
     .from(certificate)
     .where(eq(certificate.personId, personId))
-    .orderBy(desc(certificate.issuedAt));
+    .orderBy(desc(certificate.issuedAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getMyEventRegistrations(personId: string) {
@@ -58,7 +61,8 @@ export async function getMyEventRegistrations(personId: string) {
     .from(eventRegistration)
     .innerJoin(event, eq(eventRegistration.eventId, event.id))
     .where(eq(eventRegistration.personId, personId))
-    .orderBy(desc(event.startsAt));
+    .orderBy(desc(event.startsAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getMyVolunteerProfile(personId: string) {
@@ -79,7 +83,8 @@ export async function getMyVolunteerApplications(personId: string) {
       eq(volunteerApplication.opportunityId, opportunity.id),
     )
     .where(eq(volunteerApplication.personId, personId))
-    .orderBy(desc(volunteerApplication.createdAt));
+    .orderBy(desc(volunteerApplication.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getMyShifts(personId: string) {
@@ -88,7 +93,8 @@ export async function getMyShifts(personId: string) {
     .from(shiftAssignment)
     .leftJoin(event, eq(shiftAssignment.eventId, event.id))
     .where(eq(shiftAssignment.personId, personId))
-    .orderBy(desc(shiftAssignment.startsAt));
+    .orderBy(desc(shiftAssignment.startsAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getMyHours(personId: string) {
@@ -96,7 +102,8 @@ export async function getMyHours(personId: string) {
     .select()
     .from(timeEntry)
     .where(eq(timeEntry.personId, personId))
-    .orderBy(desc(timeEntry.activityDate));
+    .orderBy(desc(timeEntry.activityDate))
+    .limit(LIST_LIMIT);
 }
 
 export async function hasApplied(personId: string, cohortId: string) {
@@ -122,7 +129,8 @@ export async function getMyRecognition(personId: string) {
     .select()
     .from(recognition)
     .where(eq(recognition.personId, personId))
-    .orderBy(desc(recognition.awardedAt));
+    .orderBy(desc(recognition.awardedAt))
+    .limit(LIST_LIMIT);
 }
 
 /** Upcoming events a volunteer can sign up to help at (VOL-009). */
@@ -155,6 +163,9 @@ import {
   course as courseTable,
 } from "@/db/schema";
 
+/** Safety cap so no list query can return an unbounded result set. */
+const LIST_LIMIT = 500;
+
 /** Learner attendance history (PRD LMS-013). */
 export async function getMyAttendance(personId: string) {
   return db
@@ -169,7 +180,8 @@ export async function getMyAttendance(personId: string) {
     .innerJoin(cohort, eq(cohortSession.cohortId, cohort.id))
     .innerJoin(courseTable, eq(cohort.courseId, courseTable.id))
     .where(eq(attendance.personId, personId))
-    .orderBy(desc(cohortSession.startsAt));
+    .orderBy(desc(cohortSession.startsAt))
+    .limit(LIST_LIMIT);
 }
 
 /** Assessment attempt history (PRD LMS-013). */
@@ -179,7 +191,8 @@ export async function getMyAttempts(personId: string) {
     .from(assessmentAttempt)
     .innerJoin(assessment, eq(assessmentAttempt.assessmentId, assessment.id))
     .where(eq(assessmentAttempt.personId, personId))
-    .orderBy(desc(assessmentAttempt.createdAt));
+    .orderBy(desc(assessmentAttempt.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 /** Recommend published courses the learner is not yet enrolled in (LMS-013). */

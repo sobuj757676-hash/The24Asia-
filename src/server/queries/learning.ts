@@ -21,7 +21,8 @@ export async function listAssessments() {
     .select({ assessment, courseTitle: course.title })
     .from(assessment)
     .innerJoin(course, eq(assessment.courseId, course.id))
-    .orderBy(desc(assessment.createdAt));
+    .orderBy(desc(assessment.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 export async function getAssessmentWithQuestions(id: string) {
@@ -31,7 +32,8 @@ export async function getAssessmentWithQuestions(id: string) {
     .select()
     .from(assessmentQuestion)
     .where(eq(assessmentQuestion.assessmentId, id))
-    .orderBy(assessmentQuestion.sequence);
+    .orderBy(assessmentQuestion.sequence)
+    .limit(LIST_LIMIT);
   return { assessment: a, questions };
 }
 
@@ -94,7 +96,8 @@ export async function getPublishedAssessment(id: string) {
     })
     .from(assessmentQuestion)
     .where(eq(assessmentQuestion.assessmentId, id))
-    .orderBy(assessmentQuestion.sequence);
+    .orderBy(assessmentQuestion.sequence)
+    .limit(LIST_LIMIT);
   return { assessment: a, questions };
 }
 
@@ -110,7 +113,8 @@ export async function materialsForPerson(personId: string) {
     .select()
     .from(learningMaterial)
     .where(inArray(learningMaterial.courseId, courseIds))
-    .orderBy(learningMaterial.displayOrder);
+    .orderBy(learningMaterial.displayOrder)
+    .limit(LIST_LIMIT);
 }
 
 /* --------------------------------------------------------- pathways */
@@ -120,11 +124,12 @@ export async function listPathwaysPublished() {
     .select()
     .from(learningPath)
     .where(eq(learningPath.published, true))
-    .orderBy(learningPath.displayOrder);
+    .orderBy(learningPath.displayOrder)
+    .limit(LIST_LIMIT);
 }
 
 export async function listPathwaysAll() {
-  return db.select().from(learningPath).orderBy(learningPath.displayOrder);
+  return db.select().from(learningPath).orderBy(learningPath.displayOrder).limit(LIST_LIMIT);
 }
 
 export async function getPathwayBySlug(slug: string) {
@@ -135,7 +140,8 @@ export async function getPathwayBySlug(slug: string) {
     .from(learningPathStep)
     .innerJoin(course, eq(learningPathStep.courseId, course.id))
     .where(eq(learningPathStep.pathId, p.id))
-    .orderBy(learningPathStep.sequence);
+    .orderBy(learningPathStep.sequence)
+    .limit(LIST_LIMIT);
   return { path: p, steps };
 }
 
@@ -144,11 +150,15 @@ export async function listMaterialsAll() {
     .select({ material: learningMaterial, courseTitle: course.title })
     .from(learningMaterial)
     .leftJoin(course, eq(learningMaterial.courseId, course.id))
-    .orderBy(desc(learningMaterial.createdAt));
+    .orderBy(desc(learningMaterial.createdAt))
+    .limit(LIST_LIMIT);
 }
 
 
 import { cohortSession, attendance } from "@/db/schema";
+
+/** Safety cap so no list query can return an unbounded result set. */
+const LIST_LIMIT = 500;
 
 export async function getCohortDetail(cohortId: string) {
   const rows = await db
@@ -162,7 +172,8 @@ export async function getCohortDetail(cohortId: string) {
     .select()
     .from(cohortSession)
     .where(eq(cohortSession.cohortId, cohortId))
-    .orderBy(cohortSession.sequence);
+    .orderBy(cohortSession.sequence)
+    .limit(LIST_LIMIT);
   return { ...rows[0], sessions };
 }
 

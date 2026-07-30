@@ -17,6 +17,15 @@ import {
   impactMetric,
 } from "@/db/schema";
 
+/**
+ * Hard cap for admin list screens. Every one of these queries used to be
+ * unbounded, so a table that grew to tens of thousands of rows would render
+ * the entire result set into HTML — slow for the browser and a memory risk on
+ * the server. Screens show the newest rows first, so the cap is safe, and the
+ * UI tells the operator when it has been reached.
+ */
+export const ADMIN_LIST_LIMIT = 200;
+
 export async function getAdminKpis() {
   const [people, activeEnroll, volunteers, upcoming] = await Promise.all([
     db.select({ n: sql<number>`count(*)::int` }).from(person),
@@ -42,11 +51,11 @@ export async function getAdminKpis() {
 }
 
 export async function getPublicImpactMetricsAdmin() {
-  return db.select().from(impactMetric).orderBy(impactMetric.displayOrder);
+  return db.select().from(impactMetric).orderBy(impactMetric.displayOrder).limit(ADMIN_LIST_LIMIT);
 }
 
 export async function getAllCourses() {
-  return db.select().from(course).orderBy(course.displayOrder);
+  return db.select().from(course).orderBy(course.displayOrder).limit(ADMIN_LIST_LIMIT);
 }
 
 export async function getAllCohorts() {
@@ -54,7 +63,8 @@ export async function getAllCohorts() {
     .select({ cohort, course })
     .from(cohort)
     .innerJoin(course, eq(cohort.courseId, course.id))
-    .orderBy(desc(cohort.startDate));
+    .orderBy(desc(cohort.startDate))
+    .limit(ADMIN_LIST_LIMIT);
 }
 
 /** Pending course applications for review (PRD LMS-004). */
@@ -73,11 +83,12 @@ export async function getPendingApplications() {
     .where(
       sql`${courseApplication.status} = ANY(ARRAY['submitted','under_review','verification_pending','more_information']::application_status[])`,
     )
-    .orderBy(desc(courseApplication.createdAt));
+    .orderBy(desc(courseApplication.createdAt))
+    .limit(ADMIN_LIST_LIMIT);
 }
 
 export async function getAllEvents() {
-  return db.select().from(event).orderBy(desc(event.startsAt));
+  return db.select().from(event).orderBy(desc(event.startsAt)).limit(ADMIN_LIST_LIMIT);
 }
 
 export async function getEventRegistrationCounts(eventId: string) {
@@ -101,7 +112,8 @@ export async function getPendingVolunteerApplications() {
     .where(
       sql`${volunteerApplication.status} = ANY(ARRAY['submitted','under_review','interview','screening_pending','more_information']::volunteer_application_status[])`,
     )
-    .orderBy(desc(volunteerApplication.createdAt));
+    .orderBy(desc(volunteerApplication.createdAt))
+    .limit(ADMIN_LIST_LIMIT);
 }
 
 export async function getPeople(limit = 100) {
@@ -117,7 +129,7 @@ export async function getRecentAudit(limit = 100) {
 }
 
 export async function getFlags() {
-  return db.select().from(featureFlag).orderBy(featureFlag.key);
+  return db.select().from(featureFlag).orderBy(featureFlag.key).limit(ADMIN_LIST_LIMIT);
 }
 
 export async function getInquiries() {
@@ -144,46 +156,49 @@ import {
 } from "@/db/schema";
 
 export async function listServices() {
-  return db.select().from(service).orderBy(desc(service.createdAt));
+  return db.select().from(service).orderBy(desc(service.createdAt)).limit(ADMIN_LIST_LIMIT);
 }
 export async function listMetrics() {
-  return db.select().from(impactMetric).orderBy(impactMetric.displayOrder);
+  return db.select().from(impactMetric).orderBy(impactMetric.displayOrder).limit(ADMIN_LIST_LIMIT);
 }
 export async function listPartners() {
-  return db.select().from(partner).orderBy(partner.displayOrder);
+  return db.select().from(partner).orderBy(partner.displayOrder).limit(ADMIN_LIST_LIMIT);
 }
 export async function listEpisodes() {
   return db
     .select()
     .from(liveShowEpisode)
-    .orderBy(desc(liveShowEpisode.episodeNumber));
+    .orderBy(desc(liveShowEpisode.episodeNumber))
+    .limit(ADMIN_LIST_LIMIT);
 }
 export async function listOpportunitiesAll() {
-  return db.select().from(opportunity).orderBy(desc(opportunity.createdAt));
+  return db.select().from(opportunity).orderBy(desc(opportunity.createdAt)).limit(ADMIN_LIST_LIMIT);
 }
 export async function listPolicies() {
-  return db.select().from(policy).orderBy(desc(policy.createdAt));
+  return db.select().from(policy).orderBy(desc(policy.createdAt)).limit(ADMIN_LIST_LIMIT);
 }
 export async function listCampaigns() {
   return db
     .select()
     .from(newsletterCampaign)
-    .orderBy(desc(newsletterCampaign.createdAt));
+    .orderBy(desc(newsletterCampaign.createdAt))
+    .limit(ADMIN_LIST_LIMIT);
 }
 export async function listIncidents() {
-  return db.select().from(incident).orderBy(desc(incident.createdAt));
+  return db.select().from(incident).orderBy(desc(incident.createdAt)).limit(ADMIN_LIST_LIMIT);
 }
 export async function listRisks() {
-  return db.select().from(risk).orderBy(desc(risk.createdAt));
+  return db.select().from(risk).orderBy(desc(risk.createdAt)).limit(ADMIN_LIST_LIMIT);
 }
 export async function listExpenses() {
-  return db.select().from(expenseClaim).orderBy(desc(expenseClaim.createdAt));
+  return db.select().from(expenseClaim).orderBy(desc(expenseClaim.createdAt)).limit(ADMIN_LIST_LIMIT);
 }
 export async function listSupportRequests() {
   return db
     .select()
     .from(supportRequest)
-    .orderBy(desc(supportRequest.createdAt));
+    .orderBy(desc(supportRequest.createdAt))
+    .limit(ADMIN_LIST_LIMIT);
 }
 
 export async function listCohortSessions(cohortId: string) {
@@ -195,7 +210,11 @@ export async function listCohortSessions(cohortId: string) {
 }
 
 export async function listProductsWithVariants() {
-  const products = await db.select().from(product).orderBy(desc(product.createdAt));
+  const products = await db
+    .select()
+    .from(product)
+    .orderBy(desc(product.createdAt))
+    .limit(ADMIN_LIST_LIMIT);
   const variants = await db.select().from(productVariant);
   return products.map((p) => ({
     product: p,
@@ -217,7 +236,8 @@ export async function listContentPages() {
         eq(contentTranslation.locale, "en"),
       ),
     )
-    .orderBy(desc(contentItem.createdAt));
+    .orderBy(desc(contentItem.createdAt))
+    .limit(ADMIN_LIST_LIMIT);
 }
 
 export async function getContentForEdit(id: string) {
@@ -285,7 +305,7 @@ export async function listOrders() {
   return db.select().from(shopOrder).orderBy(desc(shopOrder.createdAt)).limit(200);
 }
 export async function listCampaignsAll() {
-  return db.select().from(campaign).orderBy(desc(campaign.createdAt));
+  return db.select().from(campaign).orderBy(desc(campaign.createdAt)).limit(ADMIN_LIST_LIMIT);
 }
 export async function getFinanceTotals() {
   const [donated] = await db
@@ -304,7 +324,8 @@ export async function listPendingHours() {
     .from(timeEntry)
     .leftJoin(person, eq(timeEntry.personId, person.id))
     .where(eq(timeEntry.approved, false))
-    .orderBy(desc(timeEntry.createdAt));
+    .orderBy(desc(timeEntry.createdAt))
+    .limit(ADMIN_LIST_LIMIT);
 }
 
 
@@ -316,7 +337,8 @@ export async function getEventRoster(eventId: string) {
     .from(eventRegistration)
     .leftJoin(person, eq(eventRegistration.personId, person.id))
     .where(eq(eventRegistration.eventId, eventId))
-    .orderBy(desc(eventRegistration.createdAt));
+    .orderBy(desc(eventRegistration.createdAt))
+    .limit(1000);
   return { event: ev, registrations: regs };
 }
 
@@ -375,7 +397,8 @@ export async function listActiveVolunteers() {
     .select({ personId: volunteerProfile.personId, name: person.displayName, standing: volunteerProfile.standing })
     .from(volunteerProfile)
     .innerJoin(person, eq(volunteerProfile.personId, person.id))
-    .orderBy(person.displayName);
+    .orderBy(person.displayName)
+    .limit(ADMIN_LIST_LIMIT);
 }
 
 

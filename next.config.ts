@@ -50,7 +50,18 @@ const nextConfig: NextConfig = {
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/:locale/(learner|volunteer)/:path*",
+        // These patterns must match the real route names — they previously
+        // pointed at /learner and /volunteer, which do not exist, so the
+        // signed-in panels were never actually marked noindex.
+        source: "/:locale/(account|volunteer-portal|partner-portal|dashboard)/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/:locale/(account|volunteer-portal|partner-portal|dashboard)",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/:locale/admin",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
     ];
