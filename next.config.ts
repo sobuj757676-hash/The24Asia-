@@ -11,14 +11,48 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV === "development",
 });
 
+const isDev = process.env.NODE_ENV === "development";
+
 /**
- * Security headers per PRD 19.1 (TLS/HSTS/CSP/CSRF-friendly defaults).
- * CSP is intentionally strict; adjust connect-src when adding providers.
+ * Content Security Policy (PRD 19.1). This header was previously described in
+ * a comment but never actually sent — the app shipped with no CSP at all.
+ *
+ * `script-src` allows 'unsafe-inline' because Next.js injects inline bootstrap
+ * and flight-data scripts. Nonce plumbing is not used here: the nonce would
+ * have to be threaded through the next-intl middleware response, and getting
+ * that subtly wrong silently breaks every page. The remaining directives still
+ * remove the highest-value attack primitives (base tag hijacking, plugin
+ * execution, framing, cross-origin form posts), and the app renders no
+ * user-supplied HTML — there is no `dangerouslySetInnerHTML` anywhere in the
+ * codebase — so the inline-script allowance is a narrow residual risk.
  */
+const csp = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  // Stripe Checkout is a redirect, but its JS is loaded for card fields.
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://js.stripe.com`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  `connect-src 'self' https://api.stripe.com${isDev ? " ws: http://localhost:*" : ""}`,
+  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "media-src 'self' https:",
+  "upgrade-insecure-requests",
+].join("; ");
+
+/** Security headers per PRD 19.1 (TLS/HSTS/CSP/CSRF-friendly defaults). */
 const securityHeaders = [
+  { key: "Content-Security-Policy", value: csp },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-DNS-Prefetch-Control", value: "off" },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",

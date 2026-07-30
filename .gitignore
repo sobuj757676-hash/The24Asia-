@@ -46,4 +46,8 @@ next-env.d.ts
 /public/swe-worker-*.js
 
 # drizzle
-/drizzle/meta
+# NOTE: drizzle/meta is intentionally COMMITTED. `drizzle-kit migrate` reads
+# meta/_journal.json to know which migrations exist and in what order, and
+# `drizzle-kit generate` diffs against the latest snapshot. Ignoring it meant a
+# fresh clone (including CI and the deploy pipeline) could not apply or extend
+# migrations correctly.

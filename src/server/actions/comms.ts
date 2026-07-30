@@ -16,16 +16,31 @@ import { requireUser, requirePermission } from "@/lib/auth/session";
 import { sendPushToPerson } from "@/lib/notify/notifications";
 import { audit } from "@/lib/audit";
 import { isProd } from "@/env";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 /* ----------------------------------------------------- public subscribe */
 
 export async function subscribeNewsletter(formData: FormData) {
-  const email = z.string().email().safeParse(formData.get("email"));
+  const email = z.string().email().max(320).safeParse(formData.get("email"));
   if (!email.success) return { ok: false, error: "Enter a valid email." };
+
+  // Unauthenticated write: cap it so the form cannot be used to sign strangers
+  // up in bulk or to probe which addresses already exist.
+  const { ok } = await checkRateLimit("newsletter");
+  if (!ok) {
+    return {
+      ok: false,
+      error: "Too many attempts. Please wait a few minutes and try again.",
+    };
+  }
+
   await db
     .insert(subscriber)
     .values({ email: email.data, confirmed: true })
     .onConflictDoNothing();
+
+  // Always the same response, whether or not the address was already stored —
+  // otherwise this endpoint discloses who is subscribed.
   return { ok: true };
 }
 
@@ -45,7 +60,17 @@ export async function savePushSubscription(sub: {
 }
 
 export async function removePushSubscription(endpoint: string) {
-  await db.delete(pushSubscription).where(eq(pushSubscription.endpoint, endpoint));
+  // Previously unauthenticated: anyone who knew (or guessed) an endpoint could
+  // delete another person's push subscription. Scope the delete to the caller.
+  const user = await requireUser();
+  await db
+    .delete(pushSubscription)
+    .where(
+      and(
+        eq(pushSubscription.endpoint, endpoint),
+        eq(pushSubscription.personId, user.personId),
+      ),
+    );
 }
 
 /* -------------------------------------------------------- in-app center */

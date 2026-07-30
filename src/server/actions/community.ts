@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import {
@@ -15,6 +15,7 @@ import { requireUser, requirePermission } from "@/lib/auth/session";
 import { getFlag, FLAGS } from "@/lib/flags";
 import { audit } from "@/lib/audit";
 import { slugify } from "@/lib/utils";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 /** Join a moderated group (PRD COM-001). */
 export async function joinGroup(groupId: string, formData: FormData) {
@@ -35,11 +36,27 @@ export async function createPost(groupId: string, formData: FormData) {
   const enabled = await getFlag(FLAGS.COMMUNITY);
   if (!enabled) return;
   const user = await requireUser();
+  await enforceRateLimit("community", user.personId);
   const body = z.string().min(1).max(5000).safeParse(formData.get("body"));
   if (!body.success) return;
 
   const [g] = await db.select().from(group).where(eq(group.id, groupId)).limit(1);
   if (!g) return;
+
+  // Posting requires membership of that specific group. Without this check any
+  // signed-in account could post into a group it had never joined, bypassing
+  // the join step where group rules are shown and an alias is chosen.
+  const [membership] = await db
+    .select({ id: groupMembership.id })
+    .from(groupMembership)
+    .where(
+      and(
+        eq(groupMembership.groupId, groupId),
+        eq(groupMembership.personId, user.personId),
+      ),
+    )
+    .limit(1);
+  if (!membership) return;
 
   const [row] = await db
     .insert(post)
@@ -65,8 +82,31 @@ export async function createReply(postId: string, formData: FormData) {
   const enabled = await getFlag(FLAGS.COMMUNITY);
   if (!enabled) return;
   const user = await requireUser();
+  await enforceRateLimit("community", user.personId);
   const body = z.string().min(1).max(3000).safeParse(formData.get("body"));
   if (!body.success) return;
+
+  // Resolve the parent post so we can confirm it exists, is visible, and that
+  // the replier belongs to the group it lives in.
+  const [parent] = await db
+    .select({ groupId: post.groupId, status: post.status })
+    .from(post)
+    .where(eq(post.id, postId))
+    .limit(1);
+  if (!parent || parent.status !== "published") return;
+
+  const [membership] = await db
+    .select({ id: groupMembership.id })
+    .from(groupMembership)
+    .where(
+      and(
+        eq(groupMembership.groupId, parent.groupId),
+        eq(groupMembership.personId, user.personId),
+      ),
+    )
+    .limit(1);
+  if (!membership) return;
+
   await db.insert(reply).values({
     postId,
     authorId: user.personId,
@@ -83,6 +123,7 @@ export async function reportContent(
   formData: FormData,
 ) {
   const user = await requireUser();
+  await enforceRateLimit("community", user.personId);
   const category = String(formData.get("reason") ?? "Inappropriate").trim();
   const detail = String(formData.get("detail") ?? "").trim();
   // Keep the reporter's own words — moderators need them to triage safely.

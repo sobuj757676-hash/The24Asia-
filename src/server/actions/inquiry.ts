@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { inquiry } from "@/db/schema";
 import { audit } from "@/lib/audit";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   type: z.enum(["contact", "partnership", "newsletter", "content_report"]),
@@ -31,6 +32,16 @@ export async function submitInquiry(
 
   if (!parsed.success) {
     return { ok: false, error: "Please check the form and try again." };
+  }
+
+  // Fully unauthenticated write — without a cap this is an open spam relay
+  // into the staff inbox queue.
+  const { ok } = await checkRateLimit("inquiry");
+  if (!ok) {
+    return {
+      ok: false,
+      error: "You've sent several messages already. Please wait a few minutes.",
+    };
   }
 
   const [row] = await db

@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
@@ -63,16 +63,9 @@ export async function submitAttempt(assessmentId: string, formData: FormData) {
   redirect(`/account/assessments/${assessmentId}/result?score=${scorePercent}&passed=${passed}`);
 }
 
-/** Attempts a learner has already used for an assessment. */
-export async function countAttempts(assessmentId: string, personId: string) {
-  const rows = await db
-    .select({ id: assessmentAttempt.id })
-    .from(assessmentAttempt)
-    .where(
-      and(
-        eq(assessmentAttempt.assessmentId, assessmentId),
-        eq(assessmentAttempt.personId, personId),
-      ),
-    );
-  return rows.length;
-}
+/*
+ * `countAttempts(assessmentId, personId)` used to live here. It had no caller,
+ * no authorization check, and — because every export from a "use server" module
+ * is a callable endpoint — it let anyone read how many attempts an arbitrary
+ * person had made. Removed rather than guarded, since nothing used it.
+ */

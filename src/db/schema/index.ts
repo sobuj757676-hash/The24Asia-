@@ -18,3 +18,4 @@ export * from "./commerce";
 export * from "./governance";
 export * from "./comms";
 export * from "./ops";
+export * from "./security";

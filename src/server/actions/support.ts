@@ -9,6 +9,7 @@ import { supportRequest } from "@/db/schema";
 import { getCurrentUser, requirePermission } from "@/lib/auth/session";
 import { getFlag, FLAGS } from "@/lib/flags";
 import { audit } from "@/lib/audit";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 /**
  * Private contact / support request (PRD SUP-004..006). Collects only the
@@ -18,6 +19,8 @@ import { audit } from "@/lib/audit";
 export async function createSupportRequest(formData: FormData) {
   const enabled = await getFlag(FLAGS.SUPPORT_INTAKE);
   if (!enabled) redirect("/support");
+  // Generous limit: someone in difficulty may legitimately retry.
+  await enforceRateLimit("support");
 
   const parsed = z
     .object({

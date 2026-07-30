@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getPaymentProvider, PAYMENTS_MODE } from "@/lib/payments/provider";
 import { fulfillDonation, fulfillOrder } from "@/lib/payments/fulfill";
 import { audit } from "@/lib/audit";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 /**
  * Starts a one-time donation (PRD FUND-001..003). Creates the record, then
@@ -17,6 +18,10 @@ import { audit } from "@/lib/audit";
  * browser redirect alone.
  */
 export async function startDonation(formData: FormData) {
+  // Unauthenticated and it creates a row plus a provider checkout, so it is the
+  // most attractive target for automated abuse on the whole site.
+  await enforceRateLimit("donate");
+
   const parsed = z
     .object({
       amount: z.coerce.number().min(1).max(100000),

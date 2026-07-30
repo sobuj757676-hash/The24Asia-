@@ -9,12 +9,15 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { getFlag, FLAGS } from "@/lib/flags";
 import { audit } from "@/lib/audit";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 /**
  * Creates a single-item order and routes to checkout (PRD MER-001/002).
  * Stock and payment are validated server-side.
  */
 export async function createOrder(formData: FormData) {
+  await enforceRateLimit("order");
+
   const parsed = z
     .object({
       variantId: z.string().min(1),
