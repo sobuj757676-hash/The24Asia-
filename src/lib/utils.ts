@@ -53,3 +53,12 @@ export function formatCount(value: number, locale = "en"): string {
     maximumFractionDigits: 1,
   }).format(value);
 }
+
+/**
+ * True when the given instant is in the past. Lives here rather than inline in
+ * a component because `Date.now()` inside a render body trips React's purity
+ * rule (and would be a genuine hazard in a client component).
+ */
+export function isPast(value: Date | string | number) {
+  return new Date(value).getTime() < Date.now();
+}

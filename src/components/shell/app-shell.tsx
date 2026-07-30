@@ -11,7 +11,7 @@ import {
   MessagesSquare, Megaphone, ShieldCheck, Boxes, UserCog, ScrollText,
   Flag, BookOpen, ClipboardCheck, Award, Bell, UserRound, SlidersHorizontal,
   Lock, ClipboardList, Clock, Receipt, TriangleAlert, Menu, X, LogOut,
-  ChevronDown, FolderKanban,
+  ChevronDown, FolderKanban, Loader2,
 } from "lucide-react";
 
 type PanelId = "admin" | "account" | "volunteer" | "partner";
@@ -124,6 +124,7 @@ export function AppShell({
   const router = useRouter();
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const accent = ACCENT[panel];
   const allow = allowedHrefs ? new Set(allowedHrefs) : null;
   const groups = NAV[panel]
@@ -274,21 +275,33 @@ export function AppShell({
               </span>
               <button
                 type="button"
-                aria-label="Sign out"
+                aria-label={signingOut ? "Signing out" : "Sign out"}
+                aria-busy={signingOut}
+                disabled={signingOut}
                 onClick={async () => {
+                  // Clearing caches then signing out can take a second on a
+                  // slow connection — show progress so nobody clicks twice.
+                  setSigningOut(true);
                   if (typeof caches !== "undefined") {
                     try {
                       const keys = await caches.keys();
                       await Promise.all(keys.map((k) => caches.delete(k)));
                     } catch { /* ignore */ }
                   }
-                  await authClient.signOut();
-                  router.push("/");
-                  router.refresh();
+                  try {
+                    await authClient.signOut();
+                  } finally {
+                    router.push("/");
+                    router.refresh();
+                  }
                 }}
-                className="grid size-10 place-items-center rounded-xl hover:bg-ink-100 dark:hover:bg-ink-800"
+                className="grid size-10 place-items-center rounded-xl hover:bg-ink-100 disabled:opacity-60 dark:hover:bg-ink-800"
               >
-                <LogOut className="size-5" />
+                {signingOut ? (
+                  <Loader2 className="size-5 animate-spin" aria-hidden />
+                ) : (
+                  <LogOut className="size-5" aria-hidden />
+                )}
               </button>
             </div>
           </div>

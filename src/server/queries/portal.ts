@@ -198,3 +198,29 @@ export async function getRecommendedCourses(personId: string) {
     .limit(12);
   return all.filter((c) => !taken.has(c.id)).slice(0, 3);
 }
+
+
+/**
+ * Ids of the cohorts a person has already applied to. Returned as a Set so a
+ * course page can label each batch correctly in a single round trip instead of
+ * one `hasApplied` query per batch.
+ */
+export async function getAppliedCohortIds(personId: string) {
+  const rows = await db
+    .select({ cohortId: courseApplication.cohortId })
+    .from(courseApplication)
+    .where(eq(courseApplication.personId, personId));
+  return new Set(rows.map((r) => r.cohortId));
+}
+
+/** Registration status per event for the signed-in person. */
+export async function getMyRegistrationStatusMap(personId: string) {
+  const rows = await db
+    .select({
+      eventId: eventRegistration.eventId,
+      status: eventRegistration.status,
+    })
+    .from(eventRegistration)
+    .where(eq(eventRegistration.personId, personId));
+  return new Map(rows.map((r) => [r.eventId, r.status]));
+}

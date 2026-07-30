@@ -25,14 +25,12 @@ export async function createSupportRequest(formData: FormData) {
       safeContactChannel: z.enum(["phone", "email", "in_app"]).default("in_app"),
       safeContactTime: z.string().max(120).optional(),
       discreetMessageOnly: z.boolean().optional(),
-      severity: z.enum(["routine", "high", "critical"]).default("routine"),
     })
     .safeParse({
       topic: formData.get("topic") || undefined,
       safeContactChannel: formData.get("safeContactChannel") || "in_app",
       safeContactTime: formData.get("safeContactTime") || undefined,
       discreetMessageOnly: formData.get("discreetMessageOnly") === "on",
-      severity: formData.get("severity") || "routine",
     });
   if (!parsed.success) redirect("/support/request?error=1");
 
@@ -45,7 +43,9 @@ export async function createSupportRequest(formData: FormData) {
       safeContactChannel: parsed.data.safeContactChannel,
       safeContactTime: parsed.data.safeContactTime,
       discreetMessageOnly: parsed.data.discreetMessageOnly ?? false,
-      severity: parsed.data.severity,
+      // Severity is a triage decision for the support team, never something the
+      // submitting client can set — it used to be read straight off the form.
+      severity: "routine",
       status: "received",
     })
     .returning({ id: supportRequest.id });
@@ -56,7 +56,7 @@ export async function createSupportRequest(formData: FormData) {
     action: "support_request.created",
     objectType: "support_request",
     objectId: row.id,
-    context: { severity: parsed.data.severity },
+    context: { channel: parsed.data.safeContactChannel },
   });
 
   redirect("/support/request/received");
