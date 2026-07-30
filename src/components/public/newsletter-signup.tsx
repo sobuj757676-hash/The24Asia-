@@ -16,7 +16,7 @@ export function NewsletterSignup() {
 
   if (state.ok) {
     return (
-      <p className="text-sm text-brand-700">Thanks for subscribing!</p>
+      <p className="text-sm text-brand-700 dark:text-brand-300">Thanks for subscribing!</p>
     );
   }
 

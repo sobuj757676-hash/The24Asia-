@@ -23,7 +23,7 @@ export default async function ProductPage({
   return (
     <Section>
       <Container className="max-w-xl">
-        <Link href="/shop" className="text-sm text-brand-700">← Shop</Link>
+        <Link href="/shop" className="text-sm text-brand-700 dark:text-brand-300">← Shop</Link>
         <h1 className="mt-3 text-3xl font-extrabold">{product.name}</h1>
         <p className="mt-2 text-2xl font-bold text-brand-600">
           S${(product.priceCents / 100).toFixed(2)}

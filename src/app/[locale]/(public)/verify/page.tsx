@@ -93,7 +93,7 @@ export default async function VerifyPage({
               </div>
             ) : (
               <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-5 dark:border-red-800 dark:bg-red-900/20">
-                <div className="flex items-center gap-2 text-danger">
+                <div className="flex items-center gap-2 text-danger-fg">
                   <XCircle className="size-6 shrink-0" aria-hidden />
                   <h2 className="text-lg font-bold">{t("verifyInvalid")}</h2>
                 </div>

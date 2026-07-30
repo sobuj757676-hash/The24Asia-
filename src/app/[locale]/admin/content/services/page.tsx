@@ -88,7 +88,7 @@ export default async function AdminServices({
         title="Trusted services"
         description="The directory shown on the public support page. Urgent-help entries also appear on the emergency page."
         breadcrumb={
-          <Link href="/admin/content" className="hover:text-brand-700">
+          <Link href="/admin/content" className="hover:text-brand-700 dark:text-brand-300">
             ← Content
           </Link>
         }

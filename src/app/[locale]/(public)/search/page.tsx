@@ -131,7 +131,7 @@ export default async function SearchPage({
         </form>
 
         {tooShort && (
-          <p role="alert" className="mt-4 text-sm text-danger">
+          <p role="alert" className="mt-4 text-sm text-danger-fg">
             Please type at least 2 characters.
           </p>
         )}

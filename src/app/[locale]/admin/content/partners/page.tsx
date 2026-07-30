@@ -35,7 +35,7 @@ export default async function AdminPartners({
         title="Partners"
         description="Partner organisations shown publicly, and the contacts who can access the partner portal."
         breadcrumb={
-          <Link href="/admin/content" className="hover:text-brand-700">
+          <Link href="/admin/content" className="hover:text-brand-700 dark:text-brand-300">
             ← Content
           </Link>
         }

@@ -49,7 +49,7 @@ export function ReportButton({
       <Dialog.Trigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-danger transition-colors hover:underline"
+          className="inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-danger-fg transition-colors hover:underline"
         >
           <Flag className="size-3.5" aria-hidden />
           {label}

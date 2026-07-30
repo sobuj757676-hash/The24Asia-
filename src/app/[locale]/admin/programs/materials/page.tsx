@@ -79,7 +79,7 @@ export default async function AdminMaterials({
             href={material.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-brand-700 underline-offset-2 hover:underline"
+            className="text-xs text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
           >
             Open
           </a>

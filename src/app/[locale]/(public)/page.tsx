@@ -117,7 +117,7 @@ export default async function HomePage({
                 asChild
                 variant="secondary"
                 size="sm"
-                className="mt-6 bg-white text-brand-700 hover:bg-brand-50"
+                className="mt-6 bg-white text-brand-700 dark:text-brand-300 hover:bg-brand-50"
               >
                 <Link href="/learn/how-it-works">
                   How training works

@@ -29,7 +29,7 @@ export default async function PolicyDetail({
   return (
     <Section>
       <Container className="max-w-2xl">
-        <Link href="/policies" className="text-sm text-brand-700">← Policies</Link>
+        <Link href="/policies" className="text-sm text-brand-700 dark:text-brand-300">← Policies</Link>
         <h1 className="mt-3 text-3xl font-extrabold">{p.title}</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
           Version {p.version}

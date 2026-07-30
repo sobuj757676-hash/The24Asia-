@@ -49,7 +49,7 @@ export default async function AdminCertificates({
       render: (c) => (
         <Link
           href={`/certificate/${c.verificationCode}`}
-          className="font-mono text-xs text-brand-700 underline-offset-2 hover:underline"
+          className="font-mono text-xs text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
         >
           {c.verificationCode}
         </Link>

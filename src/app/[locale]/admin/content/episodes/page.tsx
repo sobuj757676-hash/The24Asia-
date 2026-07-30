@@ -88,7 +88,7 @@ export default async function AdminEpisodes({
         title="Live shows"
         description="The episode archive shown on the public live-shows page."
         breadcrumb={
-          <Link href="/admin/content" className="hover:text-brand-700">
+          <Link href="/admin/content" className="hover:text-brand-700 dark:text-brand-300">
             ← Content
           </Link>
         }

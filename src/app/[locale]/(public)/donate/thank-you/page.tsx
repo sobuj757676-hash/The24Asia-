@@ -33,7 +33,7 @@ export default async function ThankYouPage({
   return (
     <Section>
       <Container className="max-w-lg text-center">
-        <span className="mx-auto grid size-16 place-items-center rounded-full bg-brand-100 text-brand-700">
+        <span className="mx-auto grid size-16 place-items-center rounded-full bg-brand-100 text-brand-700 dark:text-brand-300">
           <Heart className="size-8" aria-hidden />
         </span>
         <h1 className="mt-4 text-3xl font-extrabold">Thank you</h1>

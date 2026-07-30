@@ -16,7 +16,7 @@ export default async function SupportReceived({
   return (
     <Section>
       <Container className="max-w-md text-center">
-        <span className="mx-auto grid size-16 place-items-center rounded-full bg-brand-100 text-brand-700">
+        <span className="mx-auto grid size-16 place-items-center rounded-full bg-brand-100 text-brand-700 dark:text-brand-300">
           <CheckCircle2 className="size-8" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl font-bold">Request received</h1>

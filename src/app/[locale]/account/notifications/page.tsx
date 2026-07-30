@@ -59,7 +59,7 @@ export default async function NotificationsPage({
         <Bell className="mt-0.5 size-4 shrink-0 text-brand-600" aria-hidden />
         <p className="text-[var(--muted)]">
           You control what we send you. Choose topics and channels in{" "}
-          <Link href="/account/preferences" className="font-medium text-brand-700 hover:underline">
+          <Link href="/account/preferences" className="font-medium text-brand-700 dark:text-brand-300 hover:underline">
             preferences
           </Link>
           . We keep message previews discreet so they don&apos;t reveal your circumstances.

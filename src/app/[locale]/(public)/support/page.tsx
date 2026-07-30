@@ -82,7 +82,7 @@ export default async function SupportPage({
         <div className="mt-5">
           <Link
             href="/careers"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 dark:text-brand-300 hover:underline"
           >
             <BriefcaseBusiness className="size-4" aria-hidden />
             Career &amp; job opportunities
@@ -123,7 +123,7 @@ export default async function SupportPage({
                     {s.contactPhone && (
                       <a
                         href={`tel:${s.contactPhone}`}
-                        className="inline-flex items-center gap-1.5 font-medium text-brand-700 hover:underline"
+                        className="inline-flex items-center gap-1.5 font-medium text-brand-700 dark:text-brand-300 hover:underline"
                       >
                         <Phone className="size-4 shrink-0" aria-hidden />
                         {s.contactPhone}
@@ -134,7 +134,7 @@ export default async function SupportPage({
                         href={s.contactUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 font-medium text-brand-700 hover:underline"
+                        className="inline-flex items-center gap-1.5 font-medium text-brand-700 dark:text-brand-300 hover:underline"
                       >
                         <ExternalLink className="size-4 shrink-0" aria-hidden />
                         Visit website

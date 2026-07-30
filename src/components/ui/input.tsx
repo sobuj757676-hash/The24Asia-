@@ -70,7 +70,7 @@ export function Field({
     <div className="space-y-1.5">
       <label htmlFor={htmlFor} className="block text-sm font-medium">
         {label}
-        {required ? <span className="text-danger"> *</span> : null}
+        {required ? <span className="text-danger-fg"> *</span> : null}
       </label>
       {hint ? (
         <p id={hintId} className="text-xs text-[var(--muted)]">
@@ -79,7 +79,7 @@ export function Field({
       ) : null}
       {children}
       {error ? (
-        <p id={errId} role="alert" className="text-xs text-danger">
+        <p id={errId} role="alert" className="text-xs text-danger-fg">
           {error}
         </p>
       ) : null}

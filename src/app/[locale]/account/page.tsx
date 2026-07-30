@@ -221,7 +221,7 @@ export default async function AccountDashboard({
             {recommended.map((c) => (
               <Card key={c.id} className="transition-shadow hover:shadow-md">
                 <CardBody>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-700">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 dark:text-brand-300">
                     <Sparkles className="size-3.5" aria-hidden /> Free
                   </span>
                   <CardTitle className="mt-1.5 text-base">{c.title}</CardTitle>

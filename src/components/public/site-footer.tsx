@@ -75,7 +75,7 @@ export function SiteFooter() {
 
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-6">
         <div className="sm:col-span-2 lg:col-span-1">
-          <div className="flex items-center gap-2 font-extrabold text-brand-700">
+          <div className="flex items-center gap-2 font-extrabold text-brand-700 dark:text-brand-300">
             <span className="grid size-9 place-items-center rounded-xl bg-brand-600 text-white">
               24
             </span>
@@ -99,7 +99,7 @@ export function SiteFooter() {
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    className="text-sm text-[var(--muted)] transition-colors hover:text-brand-700 dark:hover:text-brand-300"
+                    className="text-sm text-[var(--muted)] transition-colors hover:text-brand-700 dark:text-brand-300 dark:hover:text-brand-300"
                   >
                     {l.label}
                   </Link>
@@ -118,17 +118,17 @@ export function SiteFooter() {
           </p>
           <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <li>
-              <Link href="/policies" className="hover:text-brand-700">
+              <Link href="/policies" className="hover:text-brand-700 dark:text-brand-300">
                 Privacy &amp; policies
               </Link>
             </li>
             <li>
-              <Link href="/about/contact" className="hover:text-brand-700">
+              <Link href="/about/contact" className="hover:text-brand-700 dark:text-brand-300">
                 {t("contact")}
               </Link>
             </li>
             <li>
-              <Link href="/search" className="hover:text-brand-700">
+              <Link href="/search" className="hover:text-brand-700 dark:text-brand-300">
                 {tc("search")}
               </Link>
             </li>

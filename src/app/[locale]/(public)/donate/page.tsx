@@ -111,7 +111,7 @@ export default async function DonatePage({
               <Badge tone="warning">Coming soon</Badge>
               <p className="mt-3 text-sm">
                 Online donations are being set up. Please{" "}
-                <Link href="/about/contact" className="font-medium text-brand-700 underline">
+                <Link href="/about/contact" className="font-medium text-brand-700 dark:text-brand-300 underline">
                   contact us
                 </Link>{" "}
                 to discuss supporting 24Asia — we can arrange a bank transfer or
@@ -126,11 +126,11 @@ export default async function DonatePage({
           <p>
             24Asia is a migrant-led volunteer group. We publish how funds are used on
             our{" "}
-            <Link href="/impact" className="font-medium text-brand-700 underline">
+            <Link href="/impact" className="font-medium text-brand-700 dark:text-brand-300 underline">
               impact page
             </Link>
             , and our policies are available{" "}
-            <Link href="/policies" className="font-medium text-brand-700 underline">
+            <Link href="/policies" className="font-medium text-brand-700 dark:text-brand-300 underline">
               here
             </Link>
             .
@@ -139,11 +139,11 @@ export default async function DonatePage({
 
         <p className="mt-6 text-center text-sm text-[var(--muted)]">
           Prefer to help another way?{" "}
-          <Link href="/volunteer" className="font-medium text-brand-700 underline">
+          <Link href="/volunteer" className="font-medium text-brand-700 dark:text-brand-300 underline">
             Volunteer your time
           </Link>{" "}
           or{" "}
-          <Link href="/about/partners" className="font-medium text-brand-700 underline">
+          <Link href="/about/partners" className="font-medium text-brand-700 dark:text-brand-300 underline">
             partner with us
           </Link>
           .

@@ -50,7 +50,7 @@ export function SiteHeader({ isAuthed }: { isAuthed: boolean }) {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2 rounded-lg font-extrabold text-brand-700"
+          className="flex shrink-0 items-center gap-2 rounded-lg font-extrabold text-brand-700 dark:text-brand-300"
           aria-label={`${tc("appName")} — ${tc("goHome")}`}
         >
           <span className="grid size-9 place-items-center rounded-xl bg-brand-600 text-white shadow-sm">

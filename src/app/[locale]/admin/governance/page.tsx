@@ -46,10 +46,10 @@ export default async function AdminGovernance({
         description="Risk register, incidents, policies and meeting records — the evidence trail for trustees, funders and auditors."
         actions={
           <>
-            <Link href="/admin/assets" className="text-sm text-brand-700 hover:underline">
+            <Link href="/admin/assets" className="text-sm text-brand-700 dark:text-brand-300 hover:underline">
               <Boxes className="mr-1 inline size-4" aria-hidden />Assets
             </Link>
-            <Link href="/admin/volunteers/expenses" className="text-sm text-brand-700 hover:underline">
+            <Link href="/admin/volunteers/expenses" className="text-sm text-brand-700 dark:text-brand-300 hover:underline">
               <Receipt className="mr-1 inline size-4" aria-hidden />Expenses
             </Link>
           </>

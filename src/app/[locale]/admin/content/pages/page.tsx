@@ -68,7 +68,7 @@ export default async function AdminPages({
         title="Pages & articles"
         description="Structured content for the public site. Stories and news appear in the public stories feed."
         breadcrumb={
-          <Link href="/admin/content" className="hover:text-brand-700">
+          <Link href="/admin/content" className="hover:text-brand-700 dark:text-brand-300">
             ← Content
           </Link>
         }

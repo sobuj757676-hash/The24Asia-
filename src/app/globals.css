@@ -32,9 +32,19 @@
   --color-ink-800: #1e293b;
   --color-ink-900: #0f172a;
 
+  /*
+   * Two variants per semantic colour. The base tone is tuned for use as a
+   * BACKGROUND behind white text; the `-fg` tone is tuned for use as TEXT on
+   * the page background. Mixing them up is how you end up with 3:1 red text,
+   * which is what several screens were doing in dark mode.
+   */
   --color-success: #16a34a;
   --color-warning: #d97706;
   --color-danger: #dc2626;
+
+  --color-success-fg: #15803d;
+  --color-warning-fg: #b45309;
+  --color-danger-fg: #b91c1c;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Noto Sans",
     "Noto Sans Bengali", "Noto Sans Tamil", sans-serif;
@@ -60,6 +70,11 @@
     --card: var(--color-ink-800);
     --border: var(--color-ink-700);
     --muted: var(--color-ink-400);
+
+    /* Lighten the text-only tones so they still clear 4.5:1 on dark cards. */
+    --color-success-fg: #6ee7b7;
+    --color-warning-fg: #fcd34d;
+    --color-danger-fg: #fca5a5;
   }
 }
 
