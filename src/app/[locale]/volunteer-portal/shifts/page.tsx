@@ -1,13 +1,18 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { Card, CardBody, CardTitle } from "@/components/ui/card";
-import { Badge, EmptyState } from "@/components/ui/misc";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { PageHeader, SectionHeader } from "@/components/ui/page-header";
+import { Card, CardBody } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field, Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionButton } from "@/components/admin/row-actions";
 import { requireUser } from "@/lib/auth/session";
 import { getMyShifts, getUpcomingEventsForSignup } from "@/server/queries/portal";
 import { signUpForShift, cancelShift } from "@/server/actions/volunteering";
 import { formatDate } from "@/lib/utils";
+import { CalendarDays, MapPin, CalendarPlus, CalendarCheck } from "lucide-react";
+
+const OPEN = ["offered", "accepted", "confirmed", "checked_in"];
 
 export default async function ShiftsPage({
   params,
@@ -23,75 +28,162 @@ export default async function ShiftsPage({
     getUpcomingEventsForSignup(user.personId),
   ]);
 
+  const now = new Date();
+  const upcoming = shifts.filter(
+    (s) => s.shift.startsAt && new Date(s.shift.startsAt) >= now && s.shift.status !== "cancelled",
+  );
+  const past = shifts.filter(
+    (s) => !s.shift.startsAt || new Date(s.shift.startsAt) < now || s.shift.status === "cancelled",
+  );
+
   return (
-    <div className="space-y-8">
+    <>
+      <PageHeader
+        title={t("myShifts")}
+        description="Shifts you've signed up for, and events that still need helpers."
+      />
+
       <section>
-        <h1 className="mb-3 text-2xl font-extrabold">{t("myShifts")}</h1>
-        {shifts.length === 0 ? (
-          <EmptyState title={t("noData")} />
+        <SectionHeader title={`Upcoming (${upcoming.length})`} />
+        {upcoming.length === 0 ? (
+          <EmptyState
+            compact
+            icon={<CalendarCheck className="size-5" aria-hidden />}
+            title="No upcoming shifts"
+            description="Sign up below to help at an event."
+          />
         ) : (
-          <div className="space-y-2">
-            {shifts.map(({ shift, event }) => (
-              <Card key={shift.id}>
-                <CardBody className="flex items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base">
-                      {event?.title ?? shift.role ?? "Shift"}
-                    </CardTitle>
-                    <p className="text-sm text-[var(--muted)]">
-                      {shift.role} ·{" "}
-                      {shift.startsAt
-                        ? formatDate(shift.startsAt, locale, { dateStyle: "medium", timeStyle: "short" })
-                        : "Time TBA"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge tone={shift.status === "cancelled" ? "danger" : "brand"}>
-                      {shift.status.replace(/_/g, " ")}
-                    </Badge>
-                    {shift.status !== "cancelled" && shift.status !== "completed" && (
+          <ul className="space-y-3">
+            {upcoming.map(({ shift, event }) => (
+              <li key={shift.id}>
+                <Card>
+                  <CardBody className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="flex flex-wrap items-center gap-2 font-semibold">
+                        {event?.title ?? shift.role ?? "Shift"}
+                        <StatusBadge status={shift.status} />
+                      </p>
+                      <div className="mt-1.5 space-y-1 text-sm text-[var(--muted)]">
+                        <p className="flex items-center gap-1.5">
+                          <CalendarDays className="size-3.5 shrink-0" aria-hidden />
+                          {shift.startsAt
+                            ? formatDate(shift.startsAt, locale, {
+                                dateStyle: "full",
+                                timeStyle: "short",
+                              })
+                            : "Time to be confirmed"}
+                        </p>
+                        {event?.locationName && (
+                          <p className="flex items-center gap-1.5">
+                            <MapPin className="size-3.5 shrink-0" aria-hidden />
+                            {event.locationName}
+                          </p>
+                        )}
+                        {shift.role && <p>Role: {shift.role}</p>}
+                      </div>
+                    </div>
+                    {OPEN.includes(shift.status) && (
                       <ActionButton
                         action={cancelShift.bind(null, shift.id)}
-                        label="Cancel"
+                        label="Cancel shift"
                         variant="ghost"
-                        confirm="Cancel this shift?"
-                        successMessage="Cancelled"
+                        confirmTitle="Cancel this shift?"
+                        confirm="Please cancel as early as you can so the coordinator has time to find a replacement."
+                        successMessage="Shift cancelled"
                       />
                     )}
-                  </div>
-                </CardBody>
-              </Card>
+                  </CardBody>
+                </Card>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
 
-      {/* Self-service shift sign-up (VOL-009) */}
-      <section>
-        <h2 className="mb-3 text-lg font-bold">Available shifts</h2>
+      <section className="mt-8">
+        <SectionHeader
+          title={`Events needing helpers (${available.length})`}
+          description="Pick a role and sign yourself up."
+        />
         {available.length === 0 ? (
-          <EmptyState title="No upcoming events need volunteers right now" />
+          <EmptyState
+            compact
+            icon={<CalendarPlus className="size-5" aria-hidden />}
+            title="Nothing to sign up for right now"
+            description="New events appear here as they're scheduled."
+          />
         ) : (
-          <div className="space-y-2">
+          <ul className="space-y-3">
             {available.map((e) => (
-              <Card key={e.id}>
-                <CardBody className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base">{e.title}</CardTitle>
-                    <p className="text-sm text-[var(--muted)]">
-                      {formatDate(e.startsAt, locale, { dateStyle: "medium", timeStyle: "short" })} · {e.locationName}
-                    </p>
-                  </div>
-                  <form action={signUpForShift.bind(null, e.id)} className="flex items-end gap-2">
-                    <Input name="role" placeholder="Role (e.g. crew)" className="h-10 w-40" />
-                    <Button type="submit" size="sm">Sign up</Button>
-                  </form>
-                </CardBody>
-              </Card>
+              <li key={e.id}>
+                <Card>
+                  <CardBody className="flex flex-wrap items-end justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold">{e.title}</p>
+                      <div className="mt-1.5 space-y-1 text-sm text-[var(--muted)]">
+                        <p className="flex items-center gap-1.5">
+                          <CalendarDays className="size-3.5 shrink-0" aria-hidden />
+                          {formatDate(e.startsAt, locale, {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </p>
+                        {e.locationName && (
+                          <p className="flex items-center gap-1.5">
+                            <MapPin className="size-3.5 shrink-0" aria-hidden />
+                            {e.locationName}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <form
+                      action={signUpForShift.bind(null, e.id)}
+                      className="flex flex-wrap items-end gap-2"
+                    >
+                      <Field label="Your role" htmlFor={`role-${e.id}`}>
+                        <Input
+                          id={`role-${e.id}`}
+                          name="role"
+                          placeholder="e.g. registration desk"
+                          className="w-full sm:w-48"
+                        />
+                      </Field>
+                      <SubmitButton pendingLabel="Signing up…">Sign up</SubmitButton>
+                    </form>
+                  </CardBody>
+                </Card>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
-    </div>
+
+      {past.length > 0 && (
+        <section className="mt-8">
+          <SectionHeader title={`Past & cancelled (${past.length})`} />
+          <ul className="space-y-2">
+            {past.map(({ shift, event }) => (
+              <li key={shift.id}>
+                <Card>
+                  <CardBody className="flex flex-wrap items-center justify-between gap-3 p-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {event?.title ?? shift.role ?? "Shift"}
+                      </p>
+                      <p className="text-xs text-[var(--muted)]">
+                        {shift.startsAt
+                          ? formatDate(shift.startsAt, locale, { dateStyle: "medium" })
+                          : "—"}
+                      </p>
+                    </div>
+                    <StatusBadge status={shift.status} />
+                  </CardBody>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
   );
 }

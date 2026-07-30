@@ -4,11 +4,16 @@ import { db } from "@/db";
 import { notification } from "@/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { markNotificationRead, markAllRead } from "@/server/actions/comms";
+import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody } from "@/components/ui/card";
-import { Badge, EmptyState } from "@/components/ui/misc";
+import { Badge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Button } from "@/components/ui/button";
 import { PushToggle } from "@/components/portal/push-toggle";
+import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/utils";
+import { Bell, BellOff } from "lucide-react";
 
 export default async function NotificationsPage({
   params,
@@ -25,45 +30,87 @@ export default async function NotificationsPage({
     .orderBy(desc(notification.createdAt))
     .limit(100);
 
+  const unread = items.filter((n) => !n.readAt).length;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold">Notifications</h1>
-        <div className="flex items-center gap-2">
-          <PushToggle />
-          <form action={markAllRead}>
-            <Button type="submit" size="sm" variant="ghost">Mark all read</Button>
-          </form>
-        </div>
+    <>
+      <PageHeader
+        title="Notifications"
+        description={
+          unread > 0
+            ? `You have ${unread} unread notification${unread === 1 ? "" : "s"}.`
+            : "You're all caught up."
+        }
+        actions={
+          <>
+            <PushToggle />
+            {unread > 0 && (
+              <form action={markAllRead}>
+                <SubmitButton variant="ghost" pendingLabel="Marking…">
+                  Mark all read
+                </SubmitButton>
+              </form>
+            )}
+          </>
+        }
+      />
+
+      <div className="mb-6 flex items-start gap-3 rounded-2xl border bg-[var(--card)] p-4 text-sm">
+        <Bell className="mt-0.5 size-4 shrink-0 text-brand-600" aria-hidden />
+        <p className="text-[var(--muted)]">
+          You control what we send you. Choose topics and channels in{" "}
+          <Link href="/account/preferences" className="font-medium text-brand-700 hover:underline">
+            preferences
+          </Link>
+          . We keep message previews discreet so they don&apos;t reveal your circumstances.
+        </p>
       </div>
 
       {items.length === 0 ? (
-        <EmptyState title="No notifications yet" />
+        <EmptyState
+          icon={<BellOff className="size-5" aria-hidden />}
+          title="No notifications yet"
+          description="We'll let you know about class changes, application decisions and certificates."
+        />
       ) : (
-        <div className="space-y-2">
-          {items.map((nItem) => (
-            <Card key={nItem.id}>
-              <CardBody className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold">{nItem.title}</p>
-                    {!nItem.readAt && <Badge tone="brand">New</Badge>}
+        <ul className="space-y-2">
+          {items.map((n) => (
+            <li key={n.id}>
+              <Card className={!n.readAt ? "border-brand-300 dark:border-brand-800" : undefined}>
+                <CardBody className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="flex flex-wrap items-center gap-2 font-medium">
+                      {n.title}
+                      {!n.readAt && <Badge tone="brand">New</Badge>}
+                    </p>
+                    {n.body && <p className="mt-1 text-sm text-[var(--muted)]">{n.body}</p>}
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      {formatDate(n.createdAt, locale, {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </p>
                   </div>
-                  {nItem.body && <p className="mt-1 text-sm text-[var(--muted)]">{nItem.body}</p>}
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    {formatDate(nItem.createdAt, locale, { dateStyle: "medium", timeStyle: "short" })}
-                  </p>
-                </div>
-                {!nItem.readAt && (
-                  <form action={markNotificationRead.bind(null, nItem.id)}>
-                    <Button type="submit" size="sm" variant="ghost">Mark read</Button>
-                  </form>
-                )}
-              </CardBody>
-            </Card>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {n.linkUrl && (
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={n.linkUrl}>Open</Link>
+                      </Button>
+                    )}
+                    {!n.readAt && (
+                      <form action={markNotificationRead.bind(null, n.id)}>
+                        <SubmitButton variant="ghost" pendingLabel="…">
+                          Mark read
+                        </SubmitButton>
+                      </form>
+                    )}
+                  </div>
+                </CardBody>
+              </Card>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
-    </div>
+    </>
   );
 }

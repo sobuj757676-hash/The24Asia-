@@ -1,37 +1,20 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { Badge as BadgeBase, type Tone } from "./status-badge";
+import { EmptyState as EmptyStateBase } from "./empty-state";
 
-/** Small status pill; never relies on color alone (PRD 14.2). */
-export function Badge({
-  className,
-  tone = "neutral",
-  children,
-}: {
-  className?: string;
-  tone?: "neutral" | "success" | "warning" | "danger" | "brand";
-  children: React.ReactNode;
-}) {
-  const tones: Record<string, string> = {
-    neutral: "bg-ink-100 text-ink-700 dark:bg-ink-700 dark:text-ink-100",
-    success: "bg-brand-100 text-brand-800",
-    warning: "bg-amber-100 text-amber-800",
-    danger: "bg-red-100 text-red-800",
-    brand: "bg-brand-600 text-white",
-  };
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        tones[tone],
-        className,
-      )}
-    >
-      {children}
-    </span>
-  );
-}
+/**
+ * Layout primitives for the public site, plus thin compatibility wrappers that
+ * delegate to the canonical design-system components. Keeping these wrappers
+ * means every existing page picked up the upgraded visuals (ring borders,
+ * richer empty states, dark-mode-correct tones) without a mechanical edit to
+ * 60 files — and there is still only ONE implementation of each component.
+ *
+ * New code should import directly from `./status-badge`, `./empty-state` and
+ * `./stat-card`.
+ */
 
-/** Section wrapper with consistent rhythm. */
+/** Vertical rhythm wrapper for public page sections. */
 export function Section({
   className,
   children,
@@ -44,6 +27,7 @@ export function Section({
   );
 }
 
+/** Centered max-width container with responsive gutters. */
 export function Container({
   className,
   children,
@@ -58,26 +42,54 @@ export function Container({
   );
 }
 
-/** Empty state (PRD 14.4). */
-export function EmptyState({
-  title,
-  body,
-  action,
+/** @deprecated Import `Badge` from `@/components/ui/status-badge`. */
+export function Badge({
+  className,
+  tone = "neutral",
+  children,
 }: {
-  title: string;
-  body?: string;
-  action?: React.ReactNode;
+  className?: string;
+  tone?: Tone;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed p-8 text-center">
-      <p className="font-medium">{title}</p>
-      {body ? <p className="mt-1 text-sm text-[var(--muted)]">{body}</p> : null}
-      {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
-    </div>
+    <BadgeBase tone={tone} className={className}>
+      {children}
+    </BadgeBase>
   );
 }
 
-/** KPI stat used on home + admin dashboards. */
+/**
+ * @deprecated Import `EmptyState` from `@/components/ui/empty-state`.
+ * Accepts the legacy `body` prop as an alias for `description`.
+ */
+export function EmptyState({
+  title,
+  body,
+  description,
+  action,
+  icon,
+}: {
+  title: string;
+  body?: string;
+  description?: string;
+  action?: React.ReactNode;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <EmptyStateBase
+      title={title}
+      description={description ?? body}
+      action={action}
+      icon={icon}
+    />
+  );
+}
+
+/**
+ * Public-facing impact figure. Number-first presentation (unlike the admin
+ * StatCard) because on marketing pages the figure is the message.
+ */
 export function Stat({
   value,
   label,
@@ -88,12 +100,12 @@ export function Stat({
   hint?: string;
 }) {
   return (
-    <div className="rounded-2xl border bg-[var(--card)] p-5 text-center">
-      <div className="text-3xl font-extrabold text-brand-600">{value}</div>
+    <div className="rounded-2xl border bg-[var(--card)] p-5 text-center shadow-sm transition-shadow hover:shadow-md">
+      <div className="text-2xl font-extrabold tabular-nums text-brand-600 sm:text-3xl">
+        {value}
+      </div>
       <div className="mt-1 text-sm font-medium">{label}</div>
-      {hint ? (
-        <div className="mt-1 text-xs text-[var(--muted)]">{hint}</div>
-      ) : null}
+      {hint ? <div className="mt-1 text-xs text-[var(--muted)]">{hint}</div> : null}
     </div>
   );
 }

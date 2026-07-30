@@ -136,6 +136,7 @@ export async function registerMentor(formData: FormData) {
     personId: user.personId,
     bio: s(formData, "bio"),
     expertise: (s(formData, "expertise") || "").split(",").map((x) => x.trim()).filter(Boolean),
+    languages: (s(formData, "languages") || "").split(",").map((x) => x.trim()).filter(Boolean),
   });
   revalidatePath("/account/career");
 }
