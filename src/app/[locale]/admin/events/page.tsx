@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/admin/row-actions";
 import {
   getAllEvents,
-  getEventRegistrationCounts,
+  getEventRegistrationCountMap,
   getById,
 } from "@/server/queries/admin";
 import { saveEvent, deleteEvent } from "@/server/actions/manage";
@@ -34,12 +34,11 @@ export default async function AdminEvents({
   setRequestLocale(locale);
   await requirePermission("event:manage");
 
-  const events = await getAllEvents();
+  const [events, countMap] = await Promise.all([
+    getAllEvents(),
+    getEventRegistrationCountMap(),
+  ]);
   const editing = await getById(events, edit);
-  const counts = await Promise.all(
-    events.map(async (e) => ({ id: e.id, n: await getEventRegistrationCounts(e.id) })),
-  );
-  const countMap = new Map(counts.map((c) => [c.id, c.n]));
 
   return (
     <div className="space-y-6">

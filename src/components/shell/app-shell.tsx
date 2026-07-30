@@ -108,12 +108,16 @@ export function AppShell({
   title,
   user,
   panels,
+  allowedHrefs,
   children,
 }: {
   panel: PanelId;
   title: string;
   user: { name: string; email: string };
   panels: { href: string; label: string }[];
+  /** When provided, only these nav destinations are shown (server-computed
+   *  from the user's permissions) so nobody sees a link they cannot open. */
+  allowedHrefs?: string[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -121,7 +125,10 @@ export function AppShell({
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
   const accent = ACCENT[panel];
-  const groups = NAV[panel];
+  const allow = allowedHrefs ? new Set(allowedHrefs) : null;
+  const groups = NAV[panel]
+    .map((g) => ({ ...g, items: allow ? g.items.filter((i) => allow.has(i.href)) : g.items }))
+    .filter((g) => g.items.length > 0);
 
   const isActive = (href: string) =>
     href === `/${panel === "account" ? "account" : panel === "volunteer" ? "volunteer-portal" : panel === "partner" ? "partner-portal" : "admin"}`
@@ -189,6 +196,9 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh bg-[var(--background)]">
+      <a href="#main" className="skip-link">
+        Skip to main content
+      </a>
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-[var(--card)] lg:block">
         {SidebarContent}
@@ -284,7 +294,11 @@ export function AppShell({
           </div>
         </header>
 
-        <main id="main" className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto max-w-7xl px-4 py-6 focus:outline-none sm:px-6 lg:py-8"
+        >
           {children}
         </main>
       </div>

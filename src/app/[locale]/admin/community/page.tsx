@@ -16,7 +16,7 @@ export default async function AdminCommunity({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  await requirePermission("content:read");
+  await requirePermission("moderation:handle");
   const [groups, queue] = await Promise.all([listAllGroups(), moderationQueue()]);
 
   return (

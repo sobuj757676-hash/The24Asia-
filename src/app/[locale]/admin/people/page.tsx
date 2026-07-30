@@ -1,8 +1,14 @@
 import { setRequestLocale } from "next-intl/server";
 import { requirePermission } from "@/lib/auth/session";
-import { Badge, EmptyState } from "@/components/ui/misc";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Badge } from "@/components/ui/status-badge";
+import { DataList, type Column } from "@/components/ui/data-list";
 import { getPeople } from "@/server/queries/admin";
 import { formatDate } from "@/lib/utils";
+import { Users } from "lucide-react";
+
+type Row = Awaited<ReturnType<typeof getPeople>>[number];
 
 export default async function AdminPeople({
   params,
@@ -11,47 +17,56 @@ export default async function AdminPeople({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  // Scoped CRM read (PRD CRM-001). Sensitive records excluded from this view.
+  // Scoped CRM read (PRD CRM-001).
   await requirePermission("person:read_scoped");
   const people = await getPeople();
 
+  const columns: Column<Row>[] = [
+    {
+      key: "name",
+      label: "Name",
+      primary: true,
+      render: (p) => <span className="font-medium">{p.displayName ?? "—"}</span>,
+    },
+    {
+      key: "locale",
+      label: "Language",
+      render: (p) => <Badge>{p.preferredLocale}</Badge>,
+    },
+    {
+      key: "needs",
+      label: "Accessibility needs",
+      render: (p) => (
+        <span className="text-[var(--muted)]">{p.accessibilityNeeds ? "Recorded" : "—"}</span>
+      ),
+    },
+    {
+      key: "joined",
+      label: "Joined",
+      align: "right",
+      render: (p) => (
+        <span className="whitespace-nowrap text-[var(--muted)]">
+          {formatDate(p.createdAt, locale)}
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold">People</h1>
-        <p className="text-[var(--muted)]">
-          Sensitive support, safeguarding and identity records are not shown
-          here (PRD CRM-002).
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title="People"
+        description="Role-appropriate relationship view. Support, safeguarding, health and identity-document records are deliberately excluded from this view (PRD CRM-002)."
+      />
       {people.length === 0 ? (
-        <EmptyState title="No people yet" />
+        <EmptyState
+          icon={<Users className="size-5" aria-hidden />}
+          title="No people yet"
+          description="Learners and volunteers appear here once they create an account."
+        />
       ) : (
-        <div className="overflow-hidden rounded-2xl border bg-[var(--card)]">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-ink-50 text-left dark:bg-ink-800">
-              <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Locale</th>
-                <th className="p-3">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {people.map((p) => (
-                <tr key={p.id} className="border-b last:border-0">
-                  <td className="p-3">{p.displayName ?? "—"}</td>
-                  <td className="p-3">
-                    <Badge>{p.preferredLocale}</Badge>
-                  </td>
-                  <td className="p-3 text-[var(--muted)]">
-                    {formatDate(p.createdAt, locale)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataList columns={columns} rows={people} getKey={(p) => p.id} caption="People directory" />
       )}
-    </div>
+    </>
   );
 }

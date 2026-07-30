@@ -249,3 +249,18 @@ export async function getPolicyBySlug(slug: string) {
     .limit(1);
   return rows[0] ?? null;
 }
+
+
+/**
+ * Filled seats for many cohorts in ONE query (previously one query per cohort).
+ */
+export async function getCohortFilledMap(): Promise<Map<string, number>> {
+  const rows = await db
+    .select({ cohortId: enrollment.cohortId, n: sql<number>`count(*)::int` })
+    .from(enrollment)
+    .where(
+      sql`${enrollment.status} = ANY(ARRAY['offered','enrolled','completed']::enrollment_status[])`,
+    )
+    .groupBy(enrollment.cohortId);
+  return new Map(rows.map((r) => [r.cohortId, r.n]));
+}

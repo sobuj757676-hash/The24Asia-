@@ -106,7 +106,9 @@ export async function moderateReport(
   reportId: string,
   decision: "remove" | "dismiss" | "warning",
 ): Promise<void> {
-  const staff = await requirePermission("content:read"); // moderators
+  // Must be a trained moderator - `content:read` is held by every member and
+  // would have allowed any signed-in user to remove content.
+  const staff = await requirePermission("moderation:handle");
   const [r] = await db
     .select()
     .from(contentReport)
@@ -139,7 +141,7 @@ export async function moderateReport(
 
 /** Approve a pending post (PRD COM-005). */
 export async function approvePost(postId: string): Promise<void> {
-  const staff = await requirePermission("content:read");
+  const staff = await requirePermission("moderation:handle");
   await db.update(post).set({ status: "published" }).where(eq(post.id, postId));
   await audit({ actorId: staff.personId, actorRole: "moderator", action: "post.approved", objectType: "post", objectId: postId });
   revalidatePath("/admin/community");

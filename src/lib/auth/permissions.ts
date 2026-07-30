@@ -54,6 +54,8 @@ export type Permission =
   // support (restricted)
   | "support:handle"
   | "safeguarding:access"
+  // community moderation (restricted - must NOT be implied by content:read)
+  | "moderation:handle"
   // fundraising
   | "donation:manage"
   | "refund:approve"
@@ -105,8 +107,8 @@ const ROLE_PERMISSIONS: Record<RoleKey, Permission[]> = {
     "person:read_scoped",
   ],
   support_coordinator: ["content:read", "support:handle", "person:read_scoped"],
-  moderator: ["content:read"],
-  safeguarding_lead: ["support:handle", "safeguarding:access"],
+  moderator: ["content:read", "moderation:handle"],
+  safeguarding_lead: ["support:handle", "safeguarding:access", "moderation:handle"],
   content_author: ["content:read", "content:draft", "content:translate"],
   translator: ["content:read", "content:translate"],
   publisher: [
@@ -138,6 +140,7 @@ const ROLE_PERMISSIONS: Record<RoleKey, Permission[]> = {
     "person:read_scoped",
     "person:read_all",
     "donation:manage",
+    "moderation:handle",
     "audit:read",
     "user:manage",
     "role:grant",

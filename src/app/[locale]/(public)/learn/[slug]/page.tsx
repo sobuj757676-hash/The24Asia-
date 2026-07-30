@@ -9,7 +9,7 @@ import { formatDate } from "@/lib/utils";
 import {
   getCourseBySlug,
   getOpenCohorts,
-  getCohortFilled,
+  getCohortFilledMap,
 } from "@/server/queries/public";
 
 export async function generateMetadata({
@@ -36,14 +36,10 @@ export default async function CourseDetail({
   const course = await getCourseBySlug(slug);
   if (!course) notFound();
 
-  const cohorts = await getOpenCohorts(course.id);
-  const filled = await Promise.all(
-    cohorts.map(async (c) => ({
-      id: c.cohort.id,
-      count: await getCohortFilled(c.cohort.id),
-    })),
-  );
-  const filledMap = new Map(filled.map((f) => [f.id, f.count]));
+  const [cohorts, filledMap] = await Promise.all([
+    getOpenCohorts(course.id),
+    getCohortFilledMap(),
+  ]);
 
   return (
     <Section>

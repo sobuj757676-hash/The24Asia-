@@ -377,3 +377,20 @@ export async function listActiveVolunteers() {
     .innerJoin(person, eq(volunteerProfile.personId, person.id))
     .orderBy(person.displayName);
 }
+
+
+/**
+ * Registration counts for many events in ONE query.
+ * Replaces the previous per-event count (an N+1 that issued one round-trip per
+ * row and grew linearly with the events list).
+ */
+export async function getEventRegistrationCountMap(): Promise<Map<string, number>> {
+  const rows = await db
+    .select({
+      eventId: eventRegistration.eventId,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(eventRegistration)
+    .groupBy(eventRegistration.eventId);
+  return new Map(rows.map((r) => [r.eventId, r.n]));
+}
