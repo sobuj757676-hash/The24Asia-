@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Container, Section, Badge } from "@/components/ui/misc";
+import { Container, Section } from "@/components/ui/misc";
+import { Badge } from "@/components/ui/status-badge";
 import { Phone, ExternalLink } from "lucide-react";
 import { getUrgentHelpServices } from "@/server/queries/public";
 

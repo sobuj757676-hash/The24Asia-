@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { Container, Section, Badge } from "@/components/ui/misc";
+import { Container, Section } from "@/components/ui/misc";
+import { Badge } from "@/components/ui/status-badge";
 import { getContentItem } from "@/server/queries/public";
 import { formatDate } from "@/lib/utils";
 

@@ -59,6 +59,12 @@ export async function getOpenCohorts(courseId?: string) {
   return rows;
 }
 
+/**
+ * Event statuses that may be shown to the public. Draft, cancelled and
+ * postponed events must never leak through a listing, a slug lookup or search.
+ */
+const PUBLIC_EVENT_STATUSES = sql`${event.status} = ANY(ARRAY['published','registration_open','registration_closed','in_progress','completed']::event_status[])`;
+
 export async function getUpcomingEvents(limit = 12) {
   return db
     .select()
@@ -74,7 +80,11 @@ export async function getUpcomingEvents(limit = 12) {
 }
 
 export async function getEventBySlug(slug: string) {
-  const rows = await db.select().from(event).where(eq(event.slug, slug)).limit(1);
+  const rows = await db
+    .select()
+    .from(event)
+    .where(and(eq(event.slug, slug), PUBLIC_EVENT_STATUSES))
+    .limit(1);
   return rows[0] ?? null;
 }
 
@@ -126,6 +136,7 @@ export async function getAwards() {
 export async function verifyCertificate(code: string) {
   const rows = await db
     .select({
+      verificationCode: certificate.verificationCode,
       courseTitle: certificate.courseTitle,
       recipientName: certificate.recipientName,
       issuedAt: certificate.issuedAt,
@@ -193,7 +204,12 @@ export async function searchPublic(q: string) {
     db
       .select({ slug: event.slug, title: event.title })
       .from(event)
-      .where(or(ilike(event.title, term), ilike(event.description, term)))
+      .where(
+        and(
+          PUBLIC_EVENT_STATUSES,
+          or(ilike(event.title, term), ilike(event.description, term)),
+        ),
+      )
       .limit(8),
     db
       .select({ slug: opportunity.slug, title: opportunity.title })

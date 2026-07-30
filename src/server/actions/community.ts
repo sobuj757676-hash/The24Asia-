@@ -83,7 +83,10 @@ export async function reportContent(
   formData: FormData,
 ) {
   const user = await requireUser();
-  const reason = String(formData.get("reason") ?? "Inappropriate").slice(0, 500);
+  const category = String(formData.get("reason") ?? "Inappropriate").trim();
+  const detail = String(formData.get("detail") ?? "").trim();
+  // Keep the reporter's own words — moderators need them to triage safely.
+  const reason = (detail ? `${category} — ${detail}` : category).slice(0, 500);
   await db.insert(contentReport).values({
     reporterId: user.personId,
     targetType,

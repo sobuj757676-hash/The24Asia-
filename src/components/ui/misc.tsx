@@ -1,17 +1,12 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Badge as BadgeBase, type Tone } from "./status-badge";
-import { EmptyState as EmptyStateBase } from "./empty-state";
 
 /**
- * Layout primitives for the public site, plus thin compatibility wrappers that
- * delegate to the canonical design-system components. Keeping these wrappers
- * means every existing page picked up the upgraded visuals (ring borders,
- * richer empty states, dark-mode-correct tones) without a mechanical edit to
- * 60 files — and there is still only ONE implementation of each component.
+ * Layout primitives for the public site.
  *
- * New code should import directly from `./status-badge`, `./empty-state` and
- * `./stat-card`.
+ * The deprecated `Badge` / `EmptyState` compatibility wrappers that used to
+ * live here have been removed now that every call site imports directly from
+ * `./status-badge` and `./empty-state` — one implementation, one import path.
  */
 
 /** Vertical rhythm wrapper for public page sections. */
@@ -39,50 +34,6 @@ export function Container({
     <div className={cn("mx-auto w-full max-w-6xl px-4 sm:px-6", className)}>
       {children}
     </div>
-  );
-}
-
-/** @deprecated Import `Badge` from `@/components/ui/status-badge`. */
-export function Badge({
-  className,
-  tone = "neutral",
-  children,
-}: {
-  className?: string;
-  tone?: Tone;
-  children: React.ReactNode;
-}) {
-  return (
-    <BadgeBase tone={tone} className={className}>
-      {children}
-    </BadgeBase>
-  );
-}
-
-/**
- * @deprecated Import `EmptyState` from `@/components/ui/empty-state`.
- * Accepts the legacy `body` prop as an alias for `description`.
- */
-export function EmptyState({
-  title,
-  body,
-  description,
-  action,
-  icon,
-}: {
-  title: string;
-  body?: string;
-  description?: string;
-  action?: React.ReactNode;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <EmptyStateBase
-      title={title}
-      description={description ?? body}
-      action={action}
-      icon={icon}
-    />
   );
 }
 

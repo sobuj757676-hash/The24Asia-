@@ -1,8 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Container, Section, Badge } from "@/components/ui/misc";
-import { Input } from "@/components/ui/input";
+import { Link } from "@/i18n/navigation";
+import { Container, Section } from "@/components/ui/misc";
+import { Badge } from "@/components/ui/status-badge";
+import { PageIntro } from "@/components/ui/page-intro";
+import { Field, Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { Card, CardBody } from "@/components/ui/card";
+import { CheckCircle2, XCircle, ScanLine } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { verifyCertificate } from "@/server/queries/public";
 
@@ -20,63 +24,108 @@ export default async function VerifyPage({
   setRequestLocale(locale);
   const t = await getTranslations("learn");
 
-  const result = code ? await verifyCertificate(code) : undefined;
+  const trimmed = code?.trim();
+  const result = trimmed ? await verifyCertificate(trimmed) : undefined;
 
   return (
     <Section>
       <Container className="max-w-xl">
-        <h1 className="text-3xl font-extrabold">{t("verifyTitle")}</h1>
-        <p className="mt-2 text-[var(--muted)]">{t("verifyIntro")}</p>
+        <PageIntro
+          title={t("verifyTitle")}
+          description={t("verifyIntro")}
+          className="mb-6"
+        />
 
-        <form method="get" className="mt-6 flex gap-2">
-          <Input
-            name="code"
-            defaultValue={code}
-            placeholder="e.g. 24A-2026-AB12CD"
-            aria-label={t("verifyCode")}
-            className="uppercase"
-          />
-          <Button type="submit">{t("verifyCode")}</Button>
-        </form>
+        <Card>
+          <CardBody>
+            <form method="get" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1">
+                <Field
+                  label={t("verifyCode")}
+                  htmlFor="code"
+                  hint="Printed on the certificate, e.g. 24A-2026-AB12CD"
+                >
+                  <Input
+                    id="code"
+                    name="code"
+                    defaultValue={trimmed}
+                    placeholder="24A-2026-AB12CD"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="font-mono uppercase"
+                  />
+                </Field>
+              </div>
+              <Button type="submit" className="sm:mb-0">
+                <ScanLine className="size-4" aria-hidden />
+                Verify
+              </Button>
+            </form>
+          </CardBody>
+        </Card>
 
         {result !== undefined && (
-          <div className="mt-6">
+          <div className="mt-6" aria-live="polite">
             {result && !result.revokedAt ? (
               <div className="rounded-2xl border-2 border-brand-500 bg-brand-50 p-5 dark:bg-brand-900/20">
-                <div className="flex items-center gap-2 text-brand-700">
-                  <CheckCircle2 className="size-6" aria-hidden />
+                <div className="flex items-center gap-2 text-brand-700 dark:text-brand-300">
+                  <CheckCircle2 className="size-6 shrink-0" aria-hidden />
                   <h2 className="text-lg font-bold">{t("verifyValid")}</h2>
                 </div>
-                <dl className="mt-3 space-y-1 text-sm">
-                  <div className="flex gap-2">
+                <dl className="mt-4 space-y-2 text-sm">
+                  <div className="flex flex-wrap gap-x-2">
                     <dt className="font-semibold">Name:</dt>
                     <dd>{result.recipientName}</dd>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-x-2">
                     <dt className="font-semibold">Course:</dt>
                     <dd>{result.courseTitle}</dd>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-x-2">
                     <dt className="font-semibold">Issued:</dt>
                     <dd>{formatDate(result.issuedAt, locale)}</dd>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2">
+                    <dt className="font-semibold">Code:</dt>
+                    <dd className="font-mono">{result.verificationCode}</dd>
                   </div>
                 </dl>
               </div>
             ) : (
-              <div className="flex items-center gap-2 rounded-2xl border p-5 text-danger">
-                <XCircle className="size-6" aria-hidden />
-                <div>
-                  <p className="font-bold">{t("verifyInvalid")}</p>
-                  {result?.revokedAt && (
-                    <Badge tone="danger" className="mt-1">
-                      Revoked
-                    </Badge>
-                  )}
+              <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-5 dark:border-red-800 dark:bg-red-900/20">
+                <div className="flex items-center gap-2 text-danger">
+                  <XCircle className="size-6 shrink-0" aria-hidden />
+                  <h2 className="text-lg font-bold">{t("verifyInvalid")}</h2>
                 </div>
+                {result?.revokedAt ? (
+                  <div className="mt-3 text-sm">
+                    <Badge tone="danger">Revoked</Badge>
+                    <p className="mt-2">
+                      This certificate was issued but has since been revoked on{" "}
+                      {formatDate(result.revokedAt, locale)}. Please contact us if you
+                      believe this is an error.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm">
+                    We couldn&apos;t find a certificate with that code. Check for typing
+                    mistakes — the code is a mix of letters and numbers — or{" "}
+                    <Link href="/about/contact" className="font-medium underline">
+                      contact us
+                    </Link>{" "}
+                    and we&apos;ll help.
+                  </p>
+                )}
               </div>
             )}
           </div>
         )}
+
+        <p className="mt-8 text-sm text-[var(--muted)]">
+          Employers: every 24Asia certificate has a unique code that can be checked
+          here at any time, free of charge. We only show the learner&apos;s name, the
+          course and the issue date.
+        </p>
       </Container>
     </Section>
   );

@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { Container, Section, Badge } from "@/components/ui/misc";
+import { Container, Section } from "@/components/ui/misc";
+import { Badge } from "@/components/ui/status-badge";
 import { Field, Input, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getProductBySlug } from "@/server/queries/public";
