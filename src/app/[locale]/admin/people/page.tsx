@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/status-badge";
 import { DataList, type Column } from "@/components/ui/data-list";
+import { TruncationNotice } from "@/components/ui/truncation-notice";
 import { getPeople } from "@/server/queries/admin";
 import { formatDate } from "@/lib/utils";
 import { Users } from "lucide-react";
@@ -65,7 +66,10 @@ export default async function AdminPeople({
           description="Learners and volunteers appear here once they create an account."
         />
       ) : (
-        <DataList columns={columns} rows={people} getKey={(p) => p.id} caption="People directory" />
+        <>
+          <DataList columns={columns} rows={people} getKey={(p) => p.id} caption="People directory" />
+          <TruncationNotice count={people.length} limit={100} what="people" />
+        </>
       )}
     </>
   );

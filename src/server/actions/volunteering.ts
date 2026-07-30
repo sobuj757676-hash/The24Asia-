@@ -161,10 +161,19 @@ export async function reportIncident(formData: FormData) {
   const user = await requireUser();
   const summary = String(formData.get("summary") ?? "").trim();
   if (!summary) return;
+
+  // `incident` has no dedicated occurrence timestamp, so rather than drop what
+  // the reporter told us we keep it at the top of the summary the safeguarding
+  // team reads. Losing "when" on a safety report is not an acceptable trade.
+  const occurredAt = String(formData.get("occurredAt") ?? "").trim();
+  const body = occurredAt
+    ? `Reported occurrence: ${occurredAt}\n\n${summary}`
+    : summary;
+
   await db.insert(incident).values({
     type: String(formData.get("type") ?? "safety"),
     severity: (String(formData.get("severity") ?? "medium") as never),
-    summary,
+    summary: body.slice(0, 5000),
     status: "reported",
     reportedById: user.personId,
   });

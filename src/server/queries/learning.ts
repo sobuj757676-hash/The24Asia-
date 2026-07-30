@@ -209,3 +209,35 @@ export async function getSessionRoster(sessionId: string) {
     roster: learners.map((l) => ({ ...l, status: markMap.get(l.personId) ?? "expected" })),
   };
 }
+
+
+/**
+ * A learner's attempt history for one assessment, so the page can show how many
+ * tries remain instead of letting them start an attempt that will be rejected.
+ */
+export async function getMyAttemptSummary(assessmentId: string, personId: string) {
+  const rows = await db
+    .select({
+      status: assessmentAttempt.status,
+      scorePercent: assessmentAttempt.scorePercent,
+      submittedAt: assessmentAttempt.submittedAt,
+    })
+    .from(assessmentAttempt)
+    .where(
+      and(
+        eq(assessmentAttempt.assessmentId, assessmentId),
+        eq(assessmentAttempt.personId, personId),
+      ),
+    )
+    .orderBy(desc(assessmentAttempt.submittedAt))
+    .limit(LIST_LIMIT);
+  return {
+    used: rows.length,
+    passed: rows.some((r) => r.status === "passed"),
+    best: rows.reduce((m, r) => Math.max(m, r.scorePercent ?? 0), 0),
+    attempts: rows,
+  };
+}
+
+
+import { assessmentAttempt } from "@/db/schema";

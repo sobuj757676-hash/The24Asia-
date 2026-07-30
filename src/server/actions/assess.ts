@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
@@ -23,7 +23,27 @@ export async function submitAttempt(assessmentId: string, formData: FormData) {
     .from(assessment)
     .where(eq(assessment.id, assessmentId))
     .limit(1);
-  if (!a) redirect("/account/courses");
+  if (!a || !a.published) redirect("/account/assessments");
+
+  // `maxAttempts` was stored and displayed but never enforced, so a learner
+  // could submit the same quiz indefinitely until they passed. Count prior
+  // attempts and stop at the configured limit.
+  const prior = await db
+    .select({ status: assessmentAttempt.status })
+    .from(assessmentAttempt)
+    .where(
+      and(
+        eq(assessmentAttempt.assessmentId, assessmentId),
+        eq(assessmentAttempt.personId, user.personId),
+      ),
+    );
+  if (prior.some((p) => p.status === "passed")) {
+    // Already passed: nothing to gain from another attempt.
+    redirect(`/account/assessments/${assessmentId}/result?passed=true`);
+  }
+  if (prior.length >= a.maxAttempts) {
+    redirect(`/account/assessments?error=no_attempts_left`);
+  }
 
   const questions = await db
     .select()

@@ -13,10 +13,13 @@ import { GraduationCap, Trophy, RotateCcw } from "lucide-react";
 
 export default async function LearnerAssessments({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { locale } = await params;
+  const { error } = await searchParams;
   setRequestLocale(locale);
   const user = await requireUser();
   const [items, attempts] = await Promise.all([
@@ -46,6 +49,22 @@ export default async function LearnerAssessments({
         title="Assessments"
         description="Short quizzes for the courses you're enrolled in. You can retake them if you don't pass first time."
       />
+
+      {error === "no_attempts_left" && (
+        <div
+          role="alert"
+          className="mb-6 rounded-2xl border border-amber-300 bg-amber-50/70 p-4 text-sm dark:border-amber-800 dark:bg-amber-900/20"
+        >
+          <p className="font-semibold">You&apos;ve used all your attempts</p>
+          <p className="text-[var(--muted)]">
+            Your trainer can reset them if there was a problem — ask them through{" "}
+            <Link href="/account/support" className="font-medium underline">
+              support
+            </Link>
+            .
+          </p>
+        </div>
+      )}
 
       <section>
         <SectionHeader title="Available now" />

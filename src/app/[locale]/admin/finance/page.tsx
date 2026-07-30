@@ -6,6 +6,7 @@ import { StatCard, StatGrid } from "@/components/ui/stat-card";
 import { StatusBadge, Badge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataList, type Column } from "@/components/ui/data-list";
+import { TruncationNotice } from "@/components/ui/truncation-notice";
 import { ActionButton } from "@/components/admin/row-actions";
 import { listDonations, listOrders, getFinanceTotals } from "@/server/queries/admin";
 import { refundDonation, setOrderStatus } from "@/server/actions/finance";
@@ -170,7 +171,10 @@ export default async function AdminFinance({
             description="Gifts appear here as soon as the payment provider confirms them."
           />
         ) : (
-          <DataList columns={donationColumns} rows={donations} getKey={(d) => d.id} caption="Donations" />
+          <>
+            <DataList columns={donationColumns} rows={donations} getKey={(d) => d.id} caption="Donations" />
+            <TruncationNotice count={donations.length} limit={200} what="donations" />
+          </>
         )}
       </section>
 
@@ -183,7 +187,10 @@ export default async function AdminFinance({
             description="Merchandise orders will appear here."
           />
         ) : (
-          <DataList columns={orderColumns} rows={orders} getKey={(o) => o.id} caption="Shop orders" />
+          <>
+            <DataList columns={orderColumns} rows={orders} getKey={(o) => o.id} caption="Shop orders" />
+            <TruncationNotice count={orders.length} limit={200} what="orders" />
+          </>
         )}
       </section>
     </>

@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DataList, type Column } from "@/components/ui/data-list";
+import { TruncationNotice } from "@/components/ui/truncation-notice";
 import { getRecentAudit } from "@/server/queries/admin";
 import { formatDate } from "@/lib/utils";
 import { ScrollText } from "lucide-react";
@@ -62,12 +63,20 @@ export default async function AdminAudit({
           description="Actions such as approvals, publications and role changes will be recorded here."
         />
       ) : (
-        <DataList
-          columns={columns}
-          rows={events}
-          getKey={(e) => e.id}
-          caption="Recent audit events"
-        />
+        <>
+          <DataList
+            columns={columns}
+            rows={events}
+            getKey={(e) => e.id}
+            caption="Recent audit events"
+          />
+          <TruncationNotice
+            count={events.length}
+            limit={100}
+            what="audit events"
+            hint="The full, append-only log is retained in the database for auditors."
+          />
+        </>
       )}
     </>
   );
