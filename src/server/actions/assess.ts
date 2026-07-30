@@ -39,7 +39,7 @@ export async function submitAttempt(assessmentId: string, formData: FormData) {
     );
   if (prior.some((p) => p.status === "passed")) {
     // Already passed: nothing to gain from another attempt.
-    redirect(`/account/assessments/${assessmentId}/result?passed=true`);
+    redirect(`/account/assessments/${assessmentId}/result`);
   }
   if (prior.length >= a.maxAttempts) {
     redirect(`/account/assessments?error=no_attempts_left`);
@@ -80,7 +80,8 @@ export async function submitAttempt(assessmentId: string, formData: FormData) {
     context: { scorePercent },
   });
 
-  redirect(`/account/assessments/${assessmentId}/result?score=${scorePercent}&passed=${passed}`);
+  // The result page reads the recorded attempt, so no score is passed in the URL.
+  redirect(`/account/assessments/${assessmentId}/result`);
 }
 
 /*
