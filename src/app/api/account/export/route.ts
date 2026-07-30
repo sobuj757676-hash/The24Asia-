@@ -20,7 +20,12 @@ import { audit } from "@/lib/audit";
  */
 export async function GET() {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  if (!user) {
+    return NextResponse.json(
+      { error: "unauthenticated" },
+      { status: 401, headers: { "Cache-Control": "no-store" } },
+    );
+  }
   const pid = user.personId;
 
   const [profile, consents, prefs, enrollments, applications, events, certs, hours] =

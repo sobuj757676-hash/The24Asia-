@@ -45,6 +45,8 @@ const csp = [
   "upgrade-insecure-requests",
 ].join("; ");
 
+const noIndex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+
 /** Security headers per PRD 19.1 (TLS/HSTS/CSP/CSRF-friendly defaults). */
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
@@ -78,25 +80,39 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
-      // Admin/portal/api must never be indexed (PRD 17).
+      /*
+       * Signed-in panels must never be indexed (PRD 17).
+       *
+       * Two shapes are needed. `localePrefix` is "as-needed", so the default
+       * locale is served WITHOUT a prefix: the real admin URL is `/admin`, and
+       * only bn/ta get `/bn/admin`. The original rules only matched a prefixed
+       * form (and pointed at `/learner` and `/volunteer`, which do not exist),
+       * so in practice no panel ever received the header.
+       *
+       * Each page also sets `robots: { index: false }` in its metadata; this is
+       * the belt-and-braces layer for non-HTML responses.
+       */
       {
-        source: "/:locale/admin/:path*",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+        source: "/(admin|account|volunteer-portal|partner-portal|dashboard)/:path*",
+        headers: noIndex,
       },
       {
-        // These patterns must match the real route names — they previously
-        // pointed at /learner and /volunteer, which do not exist, so the
-        // signed-in panels were never actually marked noindex.
-        source: "/:locale/(account|volunteer-portal|partner-portal|dashboard)/:path*",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+        source: "/(admin|account|volunteer-portal|partner-portal|dashboard)",
+        headers: noIndex,
       },
       {
-        source: "/:locale/(account|volunteer-portal|partner-portal|dashboard)",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+        source:
+          "/:locale(bn|ta)/(admin|account|volunteer-portal|partner-portal|dashboard)/:path*",
+        headers: noIndex,
       },
       {
-        source: "/:locale/admin",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+        source:
+          "/:locale(bn|ta)/(admin|account|volunteer-portal|partner-portal|dashboard)",
+        headers: noIndex,
+      },
+      {
+        source: "/api/:path*",
+        headers: [...noIndex, { key: "Cache-Control", value: "no-store" }],
       },
     ];
   },

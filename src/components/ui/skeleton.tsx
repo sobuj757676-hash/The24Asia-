@@ -71,3 +71,55 @@ export function SkeletonPage({
     </div>
   );
 }
+
+
+/**
+ * Card-grid placeholder for public list sections.
+ *
+ * These fallbacks belong to in-page `<Suspense>` boundaries, NOT to a
+ * route-group `loading.tsx`. A `loading.tsx` over the `(public)` group makes
+ * every page start streaming immediately, which means a later `notFound()` can
+ * no longer set the response status — unknown courses and events silently
+ * returned 200 (soft 404s) and would be indexed. Streaming per section keeps
+ * both the skeletons and correct status codes.
+ */
+export function CardGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div
+      role="status"
+      aria-label="Loading"
+      className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-2xl border bg-[var(--card)] p-5">
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="mt-3 h-5 w-3/4" />
+          <div className="mt-3">
+            <SkeletonText lines={2} />
+          </div>
+          <Skeleton className="mt-4 h-9 w-28 rounded-xl" />
+        </div>
+      ))}
+      <span className="sr-only">Loading…</span>
+    </div>
+  );
+}
+
+/** Placeholder for the public impact-figure strip. */
+export function StatStripSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div
+      role="status"
+      aria-label="Loading"
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-2xl border bg-[var(--card)] p-5">
+          <Skeleton className="mx-auto h-7 w-16" />
+          <Skeleton className="mx-auto mt-2 h-3 w-20" />
+        </div>
+      ))}
+      <span className="sr-only">Loading…</span>
+    </div>
+  );
+}

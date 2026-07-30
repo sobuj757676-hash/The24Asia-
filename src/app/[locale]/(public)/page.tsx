@@ -7,7 +7,7 @@ import { Container, Section, Stat } from "@/components/ui/misc";
 import { Badge, humanise } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PublicSectionHeader, CardGrid } from "@/components/ui/page-intro";
-import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
+import { CardGridSkeleton, StatStripSkeleton } from "@/components/ui/skeleton";
 import {
   GraduationCap,
   CalendarDays,
@@ -129,15 +129,15 @@ export default async function HomePage({
         </Container>
       </Section>
 
-      <Suspense fallback={<StripSkeleton cols={6} />}>
+      <Suspense fallback={<SectionShell><StatStripSkeleton /></SectionShell>}>
         <ImpactStrip locale={locale} />
       </Suspense>
 
-      <Suspense fallback={<CardsSkeleton />}>
+      <Suspense fallback={<SectionShell><CardGridSkeleton /></SectionShell>}>
         <FeaturedCourses locale={locale} />
       </Suspense>
 
-      <Suspense fallback={<CardsSkeleton count={3} />}>
+      <Suspense fallback={<SectionShell><CardGridSkeleton count={3} /></SectionShell>}>
         <UpcomingEvents locale={locale} />
       </Suspense>
 
@@ -343,43 +343,11 @@ function ViewAll({ href, label }: { href: string; label: string }) {
   );
 }
 
-function StripSkeleton({ cols }: { cols: number }) {
+/** Section chrome shared by the streamed fallbacks. */
+function SectionShell({ children }: { children: React.ReactNode }) {
   return (
     <Section className="py-10">
-      <Container>
-        <Skeleton className="h-7 w-48" />
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {Array.from({ length: cols }).map((_, i) => (
-            <div key={i} className="rounded-2xl border bg-[var(--card)] p-5">
-              <Skeleton className="mx-auto h-7 w-16" />
-              <Skeleton className="mx-auto mt-2 h-3 w-20" />
-            </div>
-          ))}
-        </div>
-      </Container>
-    </Section>
-  );
-}
-
-function CardsSkeleton({ count = 6 }: { count?: number }) {
-  return (
-    <Section className="py-10">
-      <Container>
-        <Skeleton className="h-7 w-56" />
-        <Skeleton className="mt-2 h-4 w-80" />
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: count }).map((_, i) => (
-            <div key={i} className="rounded-2xl border bg-[var(--card)] p-5">
-              <Skeleton className="h-5 w-20 rounded-full" />
-              <Skeleton className="mt-3 h-5 w-3/4" />
-              <div className="mt-3">
-                <SkeletonText lines={2} />
-              </div>
-              <Skeleton className="mt-4 h-9 w-28 rounded-xl" />
-            </div>
-          ))}
-        </div>
-      </Container>
+      <Container>{children}</Container>
     </Section>
   );
 }
