@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { Container, Section } from "@/components/ui/misc";
 import { Badge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageIntro, CardGrid } from "@/components/ui/page-intro";
+import { PageIntro } from "@/components/ui/page-intro";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Radio, Play } from "lucide-react";
@@ -23,7 +23,7 @@ export default async function LiveShowsPage({
 
   return (
     <Section>
-      <Container>
+      <Container size="wide">
         <PageIntro
           eyebrow={
             <Badge tone="brand">
@@ -52,14 +52,14 @@ export default async function LiveShowsPage({
             }
           />
         ) : (
-          <CardGrid>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {episodes.map((ep) => (
               <Card
                 key={ep.id}
                 className="flex flex-col transition-shadow hover:shadow-md"
               >
                 <CardBody className="flex flex-1 flex-col">
-                  <Badge>Episode {ep.episodeNumber}</Badge>
+                  <Badge className="self-start">Episode {ep.episodeNumber}</Badge>
                   <CardTitle className="mt-2.5 text-base">{ep.title}</CardTitle>
                   {ep.description && (
                     <p className="mt-1.5 line-clamp-3 flex-1 text-sm text-[var(--muted)]">
@@ -85,7 +85,7 @@ export default async function LiveShowsPage({
                 </CardBody>
               </Card>
             ))}
-          </CardGrid>
+          </div>
         )}
       </Container>
     </Section>

@@ -25,7 +25,7 @@ export default async function ImpactPage({
 
   return (
     <Section>
-      <Container>
+      <Container size="wide">
         <PageIntro title={t("title")} description={t("intro")} />
 
         {metrics.length === 0 ? (

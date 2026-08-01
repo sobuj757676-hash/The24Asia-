@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
@@ -43,9 +44,7 @@ export default async function CohortDetail({
           .filter(Boolean)
           .join(" · ")}
         breadcrumb={
-          <Link href="/admin/programs" className="hover:underline">
-            ← Programs
-          </Link>
+          <BackLink href="/admin/programs">Programs</BackLink>
         }
         actions={<StatusBadge status={detail.cohort.status} />}
       />

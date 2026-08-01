@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { PageHeader, SectionHeader } from "@/components/ui/page-header";
 import { Field, Input, Textarea, Select } from "@/components/ui/input";
@@ -110,9 +111,7 @@ export default async function AdminMaterials({
         title="Learning materials"
         description="Handouts, videos and worksheets attached to each course. Mark items downloadable so learners with limited data can study offline."
         breadcrumb={
-          <Link href="/admin/programs" className="hover:underline">
-            ← Programs
-          </Link>
+          <BackLink href="/admin/programs">Programs</BackLink>
         }
       />
 

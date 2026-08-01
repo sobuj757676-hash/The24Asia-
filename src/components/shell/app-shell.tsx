@@ -11,7 +11,7 @@ import {
   MessagesSquare, Megaphone, ShieldCheck, Boxes, UserCog, ScrollText,
   Flag, BookOpen, ClipboardCheck, Award, Bell, UserRound, SlidersHorizontal,
   Lock, ClipboardList, Clock, Receipt, TriangleAlert, Menu, X, LogOut,
-  ChevronDown, FolderKanban, Loader2,
+  ArrowLeft, ChevronDown, FolderKanban, Loader2,
 } from "lucide-react";
 
 type PanelId = "admin" | "account" | "volunteer" | "partner";
@@ -220,8 +220,12 @@ export function AppShell({
         ))}
       </nav>
       <div className="border-t p-3">
-        <Link href="/" className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[var(--muted)] hover:bg-ink-100 dark:hover:bg-ink-800">
-          ← Public site
+        <Link
+          href="/"
+          className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[var(--muted)] hover:bg-ink-100 dark:hover:bg-ink-800"
+        >
+          <ArrowLeft className="size-4 shrink-0" aria-hidden />
+          Public site
         </Link>
       </div>
     </div>

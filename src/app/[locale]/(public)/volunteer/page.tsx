@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { Container, Section } from "@/components/ui/misc";
 import { Badge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageIntro, CardGrid } from "@/components/ui/page-intro";
+import { PageIntro } from "@/components/ui/page-intro";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, HandHeart, MapPin, ShieldCheck, GraduationCap } from "lucide-react";
@@ -25,7 +25,7 @@ export default async function VolunteerPage({
 
   return (
     <Section>
-      <Container>
+      <Container size="wide">
         <PageIntro
           eyebrow={<Badge tone="brand">Volunteer with 24Asia</Badge>}
           title={t("title")}
@@ -84,7 +84,7 @@ export default async function VolunteerPage({
             }
           />
         ) : (
-          <CardGrid>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {opportunities.map((o) => (
               <Card
                 key={o.id}
@@ -125,7 +125,7 @@ export default async function VolunteerPage({
                 </CardBody>
               </Card>
             ))}
-          </CardGrid>
+          </div>
         )}
       </Container>
     </Section>

@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { Card, CardBody } from "@/components/ui/card";
 import { PageHeader, SectionHeader } from "@/components/ui/page-header";
@@ -93,9 +94,7 @@ export default async function AdminCertificates({
         title="Certificates"
         description="Issue verifiable certificates to learners who completed their course, and revoke them if needed."
         breadcrumb={
-          <Link href="/admin/programs" className="hover:underline">
-            ← Programs
-          </Link>
+          <BackLink href="/admin/programs">Programs</BackLink>
         }
       />
 

@@ -10,6 +10,7 @@ import {
   service,
   liveShowEpisode,
   partner,
+  mediaAsset,
   award,
   certificate,
   enrollment,
@@ -126,9 +127,19 @@ export async function getPublishedEpisodes(limit = 60) {
 }
 
 export async function getPublicPartners() {
+  // Join the media asset so callers get a usable storage key + alt text
+  // instead of an opaque id they cannot turn into a URL.
   return db
-    .select()
+    .select({
+      id: partner.id,
+      name: partner.name,
+      websiteUrl: partner.websiteUrl,
+      verified: partner.verified,
+      logoStorageKey: mediaAsset.storageKey,
+      logoAlt: mediaAsset.altText,
+    })
     .from(partner)
+    .leftJoin(mediaAsset, eq(partner.logoMediaId, mediaAsset.id))
     .where(eq(partner.displayPublicly, true))
     .orderBy(asc(partner.displayOrder))
     .limit(LIST_LIMIT);
@@ -244,9 +255,18 @@ export async function searchPublic(q: string) {
 /** Published stories/news (PRD 7.1). */
 export async function listStories() {
   return db
-    .select({ item: contentItem, title: contentTranslation.title, summary: contentTranslation.summary })
+    .select({
+      item: contentItem,
+      title: contentTranslation.title,
+      summary: contentTranslation.summary,
+      // Cover art when an editor has attached one; the card falls back to a
+      // designed gradient when it is absent or storage is not configured.
+      coverStorageKey: mediaAsset.storageKey,
+      coverAlt: mediaAsset.altText,
+    })
     .from(contentItem)
     .innerJoin(contentTranslation, and(eq(contentTranslation.contentId, contentItem.id), eq(contentTranslation.locale, "en")))
+    .leftJoin(mediaAsset, eq(contentItem.heroMediaId, mediaAsset.id))
     .where(and(eq(contentItem.status, "published"), or(eq(contentItem.type, "story"), eq(contentItem.type, "news"))))
     .orderBy(desc(contentItem.publishedAt))
     .limit(50);

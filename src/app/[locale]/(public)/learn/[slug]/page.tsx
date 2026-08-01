@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { Container, Section } from "@/components/ui/misc";
 import { Badge, humanise } from "@/components/ui/status-badge";
 import { Card, CardBody } from "@/components/ui/card";
@@ -59,12 +60,7 @@ export default async function CourseDetail({
   return (
     <Section>
       <Container className="max-w-3xl">
-        <Link
-          href="/learn"
-          className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300"
-        >
-          ← {tc("back")}
-        </Link>
+        <BackLink href="/learn">{tc("back")}</BackLink>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {course.category && <Badge>{humanise(course.category)}</Badge>}

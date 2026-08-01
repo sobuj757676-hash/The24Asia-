@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { PageHeader, SectionHeader } from "@/components/ui/page-header";
 import { FormCard, FormRow, CheckboxField } from "@/components/ui/form";
@@ -88,9 +89,7 @@ export default async function AdminServices({
         title="Trusted services"
         description="The directory shown on the public support page. Urgent-help entries also appear on the emergency page."
         breadcrumb={
-          <Link href="/admin/content" className="hover:text-brand-700 dark:text-brand-300">
-            ← Content
-          </Link>
+          <BackLink href="/admin/content">Content</BackLink>
         }
       />
 

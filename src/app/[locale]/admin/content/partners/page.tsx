@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { PageHeader, SectionHeader } from "@/components/ui/page-header";
 import { FormCard, CheckboxField } from "@/components/ui/form";
@@ -35,9 +36,7 @@ export default async function AdminPartners({
         title="Partners"
         description="Partner organisations shown publicly, and the contacts who can access the partner portal."
         breadcrumb={
-          <Link href="/admin/content" className="hover:text-brand-700 dark:text-brand-300">
-            ← Content
-          </Link>
+          <BackLink href="/admin/content">Content</BackLink>
         }
       />
 

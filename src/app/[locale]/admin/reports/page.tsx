@@ -102,8 +102,8 @@ export default async function AdminReports({
           <CardBody className="space-y-5">
             <SectionHeader title="Key rates" />
             <RateBar label="Attendance rate" value={m.attendance.rate} />
-            <RateBar label="Application → enrolment" value={conversion} />
-            <RateBar label="Enrolment → completion" value={completion} />
+            <RateBar label="Application to enrolment" value={conversion} />
+            <RateBar label="Enrolment to completion" value={completion} />
             <p className="text-xs text-[var(--muted)]">
               Based on {m.attendance.totalMarks} attendance marks recorded.
             </p>

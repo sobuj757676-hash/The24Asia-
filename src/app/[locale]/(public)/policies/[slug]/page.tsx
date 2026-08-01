@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { Container, Section } from "@/components/ui/misc";
 import { getPolicyBySlug } from "@/server/queries/public";
 import { formatDate } from "@/lib/utils";
@@ -29,7 +29,7 @@ export default async function PolicyDetail({
   return (
     <Section>
       <Container className="max-w-2xl">
-        <Link href="/policies" className="text-sm text-brand-700 dark:text-brand-300">← Policies</Link>
+        <BackLink href="/policies">Policies</BackLink>
         <h1 className="mt-3 text-3xl font-extrabold">{p.title}</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
           Version {p.version}

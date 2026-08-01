@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { Container, Section } from "@/components/ui/misc";
 import { Field, Input, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,12 +42,7 @@ export default async function ProductPage({
   return (
     <Section>
       <Container className="max-w-xl">
-        <Link
-          href="/shop"
-          className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300"
-        >
-          ← Shop
-        </Link>
+        <BackLink href="/shop">Shop</BackLink>
         <h1 className="mt-4 text-3xl font-extrabold tracking-tight">{product.name}</h1>
         <p className="mt-2 text-2xl font-bold text-brand-600">
           {formatMoney(product.priceCents, product.currency ?? "SGD", locale)}

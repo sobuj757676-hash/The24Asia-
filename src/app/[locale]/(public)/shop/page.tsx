@@ -2,7 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Container, Section } from "@/components/ui/misc";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageIntro, CardGrid } from "@/components/ui/page-intro";
+import { PageIntro } from "@/components/ui/page-intro";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Heart } from "lucide-react";
@@ -22,7 +22,7 @@ export default async function ShopPage({
 
   return (
     <Section>
-      <Container>
+      <Container size="wide">
         <PageIntro
           title="Shop"
           description="24Asia merchandise, made to be worn with pride. Every purchase funds our free training and community programmes."
@@ -43,7 +43,7 @@ export default async function ShopPage({
             }
           />
         ) : (
-          <CardGrid>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((p) => (
               <Card
                 key={p.id}
@@ -67,7 +67,7 @@ export default async function ShopPage({
                 </CardBody>
               </Card>
             ))}
-          </CardGrid>
+          </div>
         )}
       </Container>
     </Section>

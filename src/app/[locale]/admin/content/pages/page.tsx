@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { PageHeader, SectionHeader } from "@/components/ui/page-header";
 import { FormCard, FormRow, CheckboxField } from "@/components/ui/form";
@@ -68,9 +69,7 @@ export default async function AdminPages({
         title="Pages & articles"
         description="Structured content for the public site. Stories and news appear in the public stories feed."
         breadcrumb={
-          <Link href="/admin/content" className="hover:text-brand-700 dark:text-brand-300">
-            ← Content
-          </Link>
+          <BackLink href="/admin/content">Content</BackLink>
         }
       />
 

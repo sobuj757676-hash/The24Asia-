@@ -87,21 +87,3 @@ export function PublicSectionHeader({
     </div>
   );
 }
-
-/** Responsive grid for content cards on public pages. */
-export function CardGrid({
-  cols = 3,
-  children,
-  className,
-}: {
-  cols?: 2 | 3 | 4;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const colClass = {
-    2: "sm:grid-cols-2",
-    3: "sm:grid-cols-2 lg:grid-cols-3",
-    4: "sm:grid-cols-2 lg:grid-cols-4",
-  }[cols];
-  return <div className={cn("grid gap-4 sm:gap-5", colClass, className)}>{children}</div>;
-}

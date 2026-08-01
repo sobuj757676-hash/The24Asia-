@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { Container, Section } from "@/components/ui/misc";
 import { Card, CardBody } from "@/components/ui/card";
 import { getPathwayBySlug } from "@/server/queries/learning";
@@ -19,7 +20,7 @@ export default async function PathwayDetail({
   return (
     <Section>
       <Container className="max-w-2xl">
-        <Link href="/learn/pathways" className="text-sm text-brand-700 dark:text-brand-300">← Pathways</Link>
+        <BackLink href="/learn/pathways">Pathways</BackLink>
         <h1 className="mt-3 text-3xl font-extrabold">{path.title}</h1>
         {path.description && <p className="mt-2 text-[var(--muted)]">{path.description}</p>}
         <ol className="mt-6 space-y-3">

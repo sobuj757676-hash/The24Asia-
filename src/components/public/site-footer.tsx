@@ -58,7 +58,7 @@ export function SiteFooter() {
     <footer className="mt-8 border-t bg-[var(--card)]">
       {/* Urgent help stays reachable from the bottom of every page */}
       <div className="border-b bg-accent-500/5">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-6 lg:px-8">
           <p className="flex items-center gap-2 text-sm font-medium">
             <AlertTriangle className="size-4 shrink-0 text-accent-600" aria-hidden />
             Need help urgently? You are not alone.
@@ -73,8 +73,8 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-6">
-        <div className="sm:col-span-2 lg:col-span-1">
+      <div className="mx-auto grid max-w-7xl gap-x-8 gap-y-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-12 lg:px-8">
+        <div className="sm:col-span-2 lg:col-span-4 lg:pr-8">
           <div className="flex items-center gap-2 font-extrabold text-brand-700 dark:text-brand-300">
             <span className="grid size-9 place-items-center rounded-xl bg-brand-600 text-white">
               24
@@ -89,8 +89,9 @@ export function SiteFooter() {
             <NewsletterSignup />
           </div>
         </div>
+        <div className="grid gap-x-8 gap-y-10 sm:col-span-2 sm:grid-cols-3 lg:col-span-8 lg:grid-cols-5">
         {cols.map((col) => (
-          <nav key={col.heading} aria-labelledby={`footer-${col.heading}`}>
+          <nav key={col.heading} aria-labelledby={`footer-${col.heading}`} >
             <h2 id={`footer-${col.heading}`} className="text-sm font-semibold">
               {col.heading}
             </h2>
@@ -108,10 +109,11 @@ export function SiteFooter() {
             </ul>
           </nav>
         ))}
+        </div>
       </div>
 
       <div className="border-t">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-[var(--muted)] sm:flex-row sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-[var(--muted)] sm:flex-row sm:px-6 lg:px-8">
           <p>
             © {new Date().getFullYear()} 24Asia · Singapore · Migrant-led volunteer
             group

@@ -23,7 +23,7 @@ export default async function SchedulePage({
 
   return (
     <Section>
-      <Container>
+      <Container size="wide">
         <PageIntro
           title={t("scheduleTitle")}
           description="Every intake currently open for registration. Classes are free — bring a friend."

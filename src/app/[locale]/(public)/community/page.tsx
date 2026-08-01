@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { Container, Section } from "@/components/ui/misc";
 import { Badge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageIntro, CardGrid } from "@/components/ui/page-intro";
+import { PageIntro } from "@/components/ui/page-intro";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, ShieldCheck, MessagesSquare } from "lucide-react";
@@ -24,7 +24,7 @@ export default async function CommunityPage({
 
   return (
     <Section>
-      <Container>
+      <Container size="wide">
         <PageIntro
           title="Community"
           description="Moderated groups where members support each other. Please be kind, and keep personal contact details private."
@@ -63,7 +63,7 @@ export default async function CommunityPage({
             }
           />
         ) : (
-          <CardGrid>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {groups.map((g) => (
               <Link key={g.id} href={`/community/${g.slug}`} className="block h-full">
                 <Card className="h-full transition-all hover:border-brand-400 hover:shadow-md">
@@ -77,7 +77,7 @@ export default async function CommunityPage({
                 </Card>
               </Link>
             ))}
-          </CardGrid>
+          </div>
         )}
       </Container>
     </Section>

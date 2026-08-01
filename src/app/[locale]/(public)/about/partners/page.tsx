@@ -37,7 +37,7 @@ export default async function PartnersPage({
 
   return (
     <Section>
-      <Container>
+      <Container size="wide">
         <PageIntro
           title="Our partners"
           description="We collaborate with institutions, employers and community organisations across Singapore. Nothing we do at scale happens alone."

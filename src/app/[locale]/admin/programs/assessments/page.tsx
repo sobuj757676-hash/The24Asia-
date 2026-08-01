@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/input";
@@ -46,9 +47,7 @@ export default async function AdminAssessments({
         title="Assessments"
         description="Create quizzes, set pass marks and manage the question bank for each course."
         breadcrumb={
-          <Link href="/admin/programs" className="hover:underline">
-            ← Programs
-          </Link>
+          <BackLink href="/admin/programs">Programs</BackLink>
         }
       />
 

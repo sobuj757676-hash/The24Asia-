@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import {
   getPublishedAssessment,
   getMyAttemptSummary,
@@ -40,9 +41,7 @@ export default async function TakeAssessment({
         title={assessment.title}
         description={`Pass mark ${assessment.passMark}%. Choose the best answer for each question — there's no time limit.`}
         breadcrumb={
-          <Link href="/account/assessments" className="hover:underline">
-            ← My assessments
-          </Link>
+          <BackLink href="/account/assessments">My assessments</BackLink>
         }
         actions={
           <div className="flex flex-wrap items-center gap-2">

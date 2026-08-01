@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input, Textarea, Select } from "@/components/ui/input";
@@ -37,9 +38,7 @@ export default async function AdminOpportunities({
         title="Volunteer opportunities"
         description="Define each role clearly — purpose, duties, commitment and risk level — so volunteers know what they are signing up for."
         breadcrumb={
-          <Link href="/admin/volunteers" className="hover:underline">
-            ← Volunteers
-          </Link>
+          <BackLink href="/admin/volunteers">Volunteers</BackLink>
         }
         actions={
           <span className="text-sm text-[var(--muted)]">

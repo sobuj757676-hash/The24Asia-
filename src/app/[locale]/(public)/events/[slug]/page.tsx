@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { Container, Section } from "@/components/ui/misc";
 import { Badge, humanise, StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
@@ -47,12 +48,7 @@ export default async function EventDetail({
   return (
     <Section>
       <Container className="max-w-3xl">
-        <Link
-          href="/events"
-          className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300"
-        >
-          ← {tc("back")}
-        </Link>
+        <BackLink href="/events">{tc("back")}</BackLink>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Badge tone="brand">{humanise(e.category)}</Badge>

@@ -1,5 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard, StatGrid } from "@/components/ui/stat-card";
@@ -114,9 +114,7 @@ export default async function AdminExpenses({
         title="Expense claims"
         description="Reimburse volunteers promptly — nobody should be out of pocket for giving their time."
         breadcrumb={
-          <Link href="/admin/volunteers" className="hover:underline">
-            ← Volunteers
-          </Link>
+          <BackLink href="/admin/volunteers">Volunteers</BackLink>
         }
       />
 

@@ -2,7 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Container, Section } from "@/components/ui/misc";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageIntro, CardGrid } from "@/components/ui/page-intro";
+import { PageIntro } from "@/components/ui/page-intro";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Route } from "lucide-react";
@@ -21,7 +21,7 @@ export default async function PathwaysPage({
 
   return (
     <Section>
-      <Container>
+      <Container size="wide">
         <PageIntro
           title="Learning pathways"
           description="Not sure where to start? A pathway is a recommended order of courses that builds towards a goal — finish one step and the next is waiting."
@@ -44,7 +44,7 @@ export default async function PathwaysPage({
             }
           />
         ) : (
-          <CardGrid>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {pathways.map((p) => (
               <Link
                 key={p.id}
@@ -73,7 +73,7 @@ export default async function PathwaysPage({
                 </Card>
               </Link>
             ))}
-          </CardGrid>
+          </div>
         )}
       </Container>
     </Section>

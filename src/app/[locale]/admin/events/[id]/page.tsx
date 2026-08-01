@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/ui/nav-link";
 import { requirePermission } from "@/lib/auth/session";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard, StatGrid } from "@/components/ui/stat-card";
@@ -93,9 +93,7 @@ export default async function EventRoster({
           timeStyle: "short",
         })}
         breadcrumb={
-          <Link href="/admin/events" className="hover:underline">
-            ← Events
-          </Link>
+          <BackLink href="/admin/events">Events</BackLink>
         }
         actions={<StatusBadge status={data.event.status} />}
       />
